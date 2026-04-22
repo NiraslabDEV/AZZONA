@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AZZONA — Maputo's Finest</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --gold: #C9A96E;
+  --gold-light: #E2C992;
+  --dark: #0A0A0A;
+  --dark2: #111111;
+  --dark3: #1A1A1A;
+  --cream: #F5F0E8;
+  --text: #B8B0A0;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--dark);
+  color: var(--cream);
+  font-family: 'Cormorant Garamond', serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scroll reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(60px);
+  transition: opacity 1s cubic-bezier(.16,1,.3,1), transform 1s cubic-bezier(.16,1,.3,1);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-left {
+  opacity: 0;
+  transform: translateX(-80px);
+  transition: opacity 1s cubic-bezier(.16,1,.3,1), transform 1s cubic-bezier(.16,1,.3,1);
+}
+.reveal-left.visible { opacity: 1; transform: translateX(0); }
+.reveal-right {
+  opacity: 0;
+  transform: translateX(80px);
+  transition: opacity 1s cubic-bezier(.16,1,.3,1), transform 1s cubic-bezier(.16,1,.3,1);
+}
+.reveal-right.visible { opacity: 1; transform: translateX(0); }
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 1s cubic-bezier(.16,1,.3,1), transform 1s cubic-bezier(.16,1,.3,1);
+}
+.reveal-scale.visible { opacity: 1; transform: scale(1); }
+
+/* NAV */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 24px 48px;
+  background: linear-gradient(to bottom, rgba(10,10,10,0.9), transparent);
+  transition: background 0.5s, backdrop-filter 0.5s;
+}
+nav.scrolled {
+  background: rgba(10,10,10,0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.nav-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 24px; font-weight: 700;
+  letter-spacing: 8px; color: var(--gold);
+  text-transform: uppercase;
+}
+.nav-links { display: flex; gap: 36px; list-style: none; }
+.nav-links a {
+  color: var(--cream); text-decoration: none;
+  font-family: 'Syne', sans-serif; font-size: 12px;
+  letter-spacing: 3px; text-transform: uppercase;
+  position: relative; transition: color 0.3s;
+}
+.nav-links a::after {
+  content: ''; position: absolute; bottom: -4px; left: 0;
+  width: 0; height: 1px; background: var(--gold);
+  transition: width 0.4s cubic-bezier(.16,1,.3,1);
+}
+.nav-links a:hover { color: var(--gold); }
+.nav-links a:hover::after { width: 100%; }
+
+.nav-cta {
+  font-family: 'Syne', sans-serif; font-size: 11px;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--dark); background: var(--gold);
+  padding: 12px 28px; border: none; cursor: pointer;
+  transition: all 0.4s;
+}
+.nav-cta:hover { background: var(--gold-light); transform: translateY(-2px); }
+
+/* HERO */
+.hero {
+  height: 100vh; position: relative;
+  display: flex; align-items: flex-end;
+  justify-content: flex-start;
+  overflow: hidden;
+}
+.hero-bg {
+  position: absolute; inset: 0;
+  background: url('uploads/HERO IMAGE.jpg') center/cover;
+  transform: scale(1.1);
+  transition: transform 8s cubic-bezier(.16,1,.3,1);
+}
+.hero.loaded .hero-bg { transform: scale(1); }
+.hero-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(10,10,10,1) 0%, rgba(10,10,10,0.4) 40%, rgba(10,10,10,0.2) 70%, rgba(10,10,10,0.5) 100%);
+}
+.hero-content {
+  position: relative; z-index: 2;
+  padding: 80px 64px;
+  max-width: 800px;
+}
+.hero-tag {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px; letter-spacing: 6px;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 24px;
+  opacity: 0; transform: translateY(30px);
+  animation: fadeUp 1s 0.5s forwards;
+}
+.hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(48px, 7vw, 96px);
+  font-weight: 400; line-height: 1.05;
+  letter-spacing: -1px;
+  opacity: 0; transform: translateY(40px);
+  animation: fadeUp 1.2s 0.7s forwards;
+}
+.hero h1 em {
+  font-style: italic; color: var(--gold);
+}
+.hero-sub {
+  font-size: 20px; color: var(--text);
+  margin-top: 24px; line-height: 1.6;
+  font-weight: 300;
+  opacity: 0; transform: translateY(30px);
+  animation: fadeUp 1s 1s forwards;
+}
+.hero-scroll {
+  position: absolute; bottom: 32px; left: 50%;
+  transform: translateX(-50%); z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  opacity: 0; animation: fadeUp 1s 1.5s forwards;
+}
+.hero-scroll span {
+  font-family: 'Syne', sans-serif; font-size: 10px;
+  letter-spacing: 4px; text-transform: uppercase; color: var(--gold);
+}
+.scroll-line {
+  width: 1px; height: 48px; background: var(--gold);
+  animation: scrollPulse 2s infinite;
+}
+
+@keyframes fadeUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scrollPulse {
+  0%, 100% { opacity: 0.3; transform: scaleY(0.5); }
+  50% { opacity: 1; transform: scaleY(1); }
+}
+
+/* SECTIONS */
+section { padding: 120px 64px; }
+
+.section-tag {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px; letter-spacing: 6px;
+  text-transform: uppercase; color: var(--gold);
+  margin-bottom: 16px;
+}
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 400; line-height: 1.1;
+  margin-bottom: 24px;
+}
+.section-desc {
+  font-size: 20px; color: var(--text);
+  max-width: 600px; line-height: 1.7;
+  font-weight: 300;
+}
+
+/* ABOUT */
+.about {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px; align-items: center;
+  padding: 160px 64px;
+}
+.about-img {
+  aspect-ratio: 3/4; overflow: hidden;
+  position: relative;
+}
+.about-img img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 1.5s cubic-bezier(.16,1,.3,1);
+}
+.about-img:hover img { transform: scale(1.05); }
+.about-img::after {
+  content: ''; position: absolute;
+  top: -16px; left: -16px; right: 16px; bottom: 16px;
+  border: 1px solid var(--gold);
+  opacity: 0.3; pointer-events: none;
+}
+
+/* DIVIDER */
+.gold-divider {
+  display: flex; align-items: center; gap: 24px;
+  padding: 0 64px;
+}
+.gold-divider .line { flex: 1; height: 1px; background: linear-gradient(to right, transparent, var(--gold), transparent); opacity: 0.3; }
+.gold-divider .diamond { width: 8px; height: 8px; background: var(--gold); transform: rotate(45deg); opacity: 0.6; }
+
+/* MENU CARDS */
+.menu-section { background: var(--dark2); }
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 32px; margin-top: 64px;
+}
+.dish-card {
+  background: var(--dark3);
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.6s cubic-bezier(.16,1,.3,1), box-shadow 0.6s;
+}
+.dish-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 32px 64px rgba(0,0,0,0.5);
+}
+.dish-card-img {
+  aspect-ratio: 1; overflow: hidden;
+}
+.dish-card-img img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 1.2s cubic-bezier(.16,1,.3,1);
+}
+.dish-card:hover .dish-card-img img { transform: scale(1.08); }
+.dish-card-info {
+  padding: 28px 24px;
+}
+.dish-card-info h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 400;
+  margin-bottom: 8px;
+}
+.dish-card-info p {
+  font-size: 15px; color: var(--text);
+  line-height: 1.5; font-weight: 300;
+}
+.dish-card-info .dish-tag {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--gold);
+  margin-top: 16px; display: inline-block;
+}
+
+/* PARALLAX BANNER */
+.parallax-banner {
+  height: 70vh; position: relative;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.parallax-banner .bg {
+  position: absolute; inset: -20%; 
+  background-size: cover; background-position: center;
+  will-change: transform;
+}
+.parallax-banner .overlay {
+  position: absolute; inset: 0;
+  background: rgba(10,10,10,0.6);
+}
+.parallax-banner .content {
+  position: relative; z-index: 2; text-align: center;
+  max-width: 700px; padding: 0 32px;
+}
+.parallax-banner .content h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(32px, 4vw, 56px);
+  font-weight: 400; font-style: italic;
+  line-height: 1.2;
+}
+.parallax-banner .content h2 span { color: var(--gold); }
+
+/* GALLERY */
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px; margin-top: 64px;
+}
+.gallery-item {
+  overflow: hidden; position: relative;
+  cursor: pointer; aspect-ratio: 1;
+}
+.gallery-item:nth-child(1) { grid-column: span 2; aspect-ratio: 2/1; }
+.gallery-item:nth-child(4) { grid-column: span 2; aspect-ratio: 2/1; }
+.gallery-item:nth-child(7) { grid-column: span 2; aspect-ratio: 2/1; }
+.gallery-item img {
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform 1.5s cubic-bezier(.16,1,.3,1);
+}
+.gallery-item:hover img { transform: scale(1.06); }
+.gallery-item::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(10,10,10,0.4), transparent);
+  opacity: 0; transition: opacity 0.5s;
+}
+.gallery-item:hover::after { opacity: 1; }
+
+/* HOURS/CONTACT */
+.contact-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  background: var(--dark2);
+}
+.hours-list {
+  list-style: none; margin-top: 40px;
+  font-size: 18px; line-height: 2.2;
+  color: var(--text);
+}
+.hours-list strong { color: var(--cream); font-weight: 400; }
+.contact-info { margin-top: 40px; }
+.contact-info a {
+  display: block; color: var(--gold);
+  text-decoration: none; font-size: 20px;
+  margin-bottom: 12px; transition: color 0.3s;
+}
+.contact-info a:hover { color: var(--gold-light); }
+.contact-address {
+  color: var(--text); font-size: 18px;
+  line-height: 1.7; margin-top: 24px;
+}
+
+/* FOOTER */
+footer {
+  padding: 48px 64px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-top: 1px solid rgba(201,169,110,0.15);
+}
+footer .foot-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px; font-weight: 700;
+  letter-spacing: 6px; color: var(--gold);
+}
+footer .foot-copy {
+  font-size: 13px; color: var(--text);
+  font-family: 'Syne', sans-serif;
+  letter-spacing: 2px;
+}
+footer .foot-social {
+  display: flex; gap: 24px;
+}
+footer .foot-social a {
+  color: var(--text); text-decoration: none;
+  font-family: 'Syne', sans-serif; font-size: 11px;
+  letter-spacing: 3px; text-transform: uppercase;
+  transition: color 0.3s;
+}
+footer .foot-social a:hover { color: var(--gold); }
+
+/* CTA button */
+.btn-gold {
+  display: inline-block; margin-top: 32px;
+  font-family: 'Syne', sans-serif; font-size: 11px;
+  letter-spacing: 4px; text-transform: uppercase;
+  color: var(--dark); background: var(--gold);
+  padding: 16px 40px; text-decoration: none;
+  transition: all 0.4s; border: none; cursor: pointer;
+}
+.btn-gold:hover { background: var(--gold-light); transform: translateY(-2px); }
+
+.btn-outline {
+  display: inline-block; margin-top: 32px;
+  font-family: 'Syne', sans-serif; font-size: 11px;
+  letter-spacing: 4px; text-transform: uppercase;
+  color: var(--gold); background: transparent;
+  padding: 16px 40px; text-decoration: none;
+  border: 1px solid var(--gold);
+  transition: all 0.4s; cursor: pointer;
+}
+.btn-outline:hover { background: var(--gold); color: var(--dark); }
+
+/* MARQUEE */
+.marquee-wrap {
+  overflow: hidden; padding: 40px 0;
+  border-top: 1px solid rgba(201,169,110,0.1);
+  border-bottom: 1px solid rgba(201,169,110,0.1);
+}
+.marquee {
+  display: flex; gap: 64px;
+  animation: marqueeScroll 25s linear infinite;
+  white-space: nowrap; width: max-content;
+}
+.marquee span {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(36px, 5vw, 72px);
+  font-weight: 400; font-style: italic;
+  color: rgba(201,169,110,0.15);
+}
+.marquee .dot {
+  color: var(--gold); font-style: normal; opacity: 0.4;
+}
+@keyframes marqueeScroll {
+  to { transform: translateX(-50%); }
+}
+
+/* IMAGE REVEAL */
+.img-reveal {
+  position: relative; overflow: hidden;
+}
+.img-reveal::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--dark); z-index: 2;
+  transform-origin: right;
+  transition: transform 1s cubic-bezier(.77,0,.175,1);
+}
+.img-reveal.visible::before {
+  transform: scaleX(0);
+}
+
+/* DJ CARDS */
+.dj-card {
+  background: var(--dark2);
+  display: flex; flex-direction: column;
+  cursor: pointer;
+  transition: transform 0.5s cubic-bezier(.16,1,.3,1), background 0.4s;
+  border: 1px solid rgba(201,169,110,0.06);
+  position: relative; overflow: hidden;
+}
+.dj-card::before {
+  content:''; position:absolute; inset:0;
+  background: linear-gradient(135deg, rgba(201,169,110,0.04), transparent);
+  opacity:0; transition: opacity 0.4s;
+}
+.dj-card:hover::before { opacity:1; }
+.dj-card:hover { transform: translateY(-6px); background: #161616; }
+.dj-img {
+  aspect-ratio: 1; background: #0d0d0d;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.dj-placeholder {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%;
+}
+.dj-info {
+  padding: 28px 24px;
+  border-top: 1px solid rgba(201,169,110,0.08);
+}
+.dj-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 400;
+  margin-bottom: 6px;
+}
+.dj-genre {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--text);
+}
+.dj-night {
+  margin-top: 14px;
+  font-family: 'Syne', sans-serif;
+  font-size: 10px; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--gold);
+}
+
+/* VINYL */
+.vinyl-spin svg {
+  animation: vinylRotate 3s linear infinite;
+  filter: drop-shadow(0 0 24px rgba(201,169,110,0.15));
+}
+@keyframes vinylRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Music player bar */
+#musicBar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+  background: rgba(10,10,10,0.95);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(201,169,110,0.15);
+  display: flex; align-items: center; gap: 20px;
+  padding: 12px 32px;
+  transform: translateY(100%);
+  transition: transform 0.6s cubic-bezier(.16,1,.3,1);
+}
+#musicBar.visible { transform: translateY(0); }
+.bar-eq {
+  display: flex; gap: 3px; align-items: flex-end; height: 20px;
+}
+.bar-eq span {
+  width: 3px; background: var(--gold); border-radius: 2px;
+  animation: eqBounce 0.6s ease infinite alternate;
+}
+.bar-eq span:nth-child(1) { height: 8px; animation-delay: 0s; }
+.bar-eq span:nth-child(2) { height: 16px; animation-delay: 0.1s; }
+.bar-eq span:nth-child(3) { height: 12px; animation-delay: 0.2s; }
+.bar-eq span:nth-child(4) { height: 20px; animation-delay: 0.15s; }
+.bar-eq span:nth-child(5) { height: 10px; animation-delay: 0.05s; }
+@keyframes eqBounce {
+  from { transform: scaleY(0.4); }
+  to { transform: scaleY(1); }
+}
+.bar-eq.paused span { animation-play-state: paused; opacity: 0.3; }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  nav { padding: 16px 24px; }
+  .nav-links { display: none; }
+  section { padding: 80px 24px; }
+  .about { grid-template-columns: 1fr; gap: 40px; }
+  .contact-section { grid-template-columns: 1fr; }
+  .gallery-grid { grid-template-columns: 1fr 1fr; }
+  .gallery-item:nth-child(1) { grid-row: span 1; }
+  .hero-content { padding: 60px 24px; }
+  footer { flex-direction: column; gap: 24px; text-align: center; }
+  .gold-divider { padding: 0 24px; }
+}
+@media (max-width: 600px) {
+  .menu-grid { grid-template-columns: 1fr; }
+  .gallery-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- MUSIC BAR -->
+<div id="musicBar">
+  <div class="bar-eq" id="barEq">
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+  <div style="font-family:'Syne',sans-serif; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--gold);">Azzona House Session</div>
+  <div style="font-family:'Syne',sans-serif; font-size:10px; letter-spacing:2px; color:var(--text); margin-left:4px;">· 124 BPM</div>
+  <div style="flex:1;"></div>
+  <input type="range" id="volSliderBar" min="0" max="1" step="0.01" value="0.35" oninput="setVolume(this.value)" style="width:80px; accent-color:var(--gold); cursor:pointer;">
+  <button onclick="toggleMusic()" style="background:none; border:1px solid rgba(201,169,110,0.3); color:var(--gold); padding:6px 16px; font-family:'Syne',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; cursor:pointer;" id="barToggleBtn">▐▐ Pause</button>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="nav-logo">Azzona</div>
+  <ul class="nav-links">
+    <li><a href="#about">O Espaço</a></li>
+    <li><a href="#menu">Menu</a></li>
+    <li><a href="#djs">DJs</a></li>
+    <li><a href="#gallery">Galeria</a></li>
+    <li><a href="#contact">Contacto</a></li>
+  </ul>
+  <button class="nav-cta" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Reservar</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-tag">Bistro · Coffee · Lounge — Maputo</div>
+    <h1>The Best Food<br>& Best <em>Vibes</em></h1>
+    <p class="hero-sub">No coração da Polana, onde a gastronomia internacional encontra a alma de Moçambique.</p>
+  </div>
+  <div class="hero-scroll">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-wrap">
+  <div class="marquee">
+    <span>Breakfood</span><span class="dot">◆</span>
+    <span>Brunch</span><span class="dot">◆</span>
+    <span>Cocktails</span><span class="dot">◆</span>
+    <span>Fine Dining</span><span class="dot">◆</span>
+    <span>Social Fridays</span><span class="dot">◆</span>
+    <span>Lounge</span><span class="dot">◆</span>
+    <span>Breakfood</span><span class="dot">◆</span>
+    <span>Brunch</span><span class="dot">◆</span>
+    <span>Cocktails</span><span class="dot">◆</span>
+    <span>Fine Dining</span><span class="dot">◆</span>
+    <span>Social Fridays</span><span class="dot">◆</span>
+    <span>Lounge</span><span class="dot">◆</span>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section class="about" id="about">
+  <div class="about-img reveal-left img-reveal">
+    <img src="uploads/482344974_1256333462871092_1204475383648980227_n.jpg" alt="Azzona Interior" loading="lazy">
+  </div>
+  <div class="reveal-right">
+    <div class="section-tag">O Espaço</div>
+    <h2 class="section-title">Onde cada detalhe<br>conta uma <em style="font-style:italic;color:var(--gold)">história</em></h2>
+    <p class="section-desc">
+      Azzona é mais do que um restaurante — é uma experiência sensorial. 
+      Da esplanada arejada ideal para o clima tropical de Maputo, ao interior com design 
+      sofisticado, cada canto foi pensado para criar momentos inesquecíveis.
+    </p>
+    <p class="section-desc" style="margin-top:16px;">
+      Perfeito para reuniões de trabalho de manhã, almoços em família ou as vibrantes 
+      Social Fridays com música ao vivo.
+    </p>
+    <a href="#menu" class="btn-outline">Explorar o Menu</a>
+  </div>
+</section>
+
+<div class="gold-divider reveal"><div class="line"></div><div class="diamond"></div><div class="line"></div></div>
+
+<!-- MENU -->
+<section class="menu-section" id="menu">
+  <div style="text-align:center; margin-bottom:24px;">
+    <div class="section-tag reveal">A Nossa Cozinha</div>
+    <h2 class="section-title reveal" style="margin: 0 auto;">Pratos de <em style="font-style:italic;color:var(--gold)">Assinatura</em></h2>
+    <p class="section-desc reveal" style="margin: 16px auto 0; text-align:center;">
+      Cozinha internacional com raízes locais — cada prato é uma obra de arte.
+    </p>
+  </div>
+
+  <div class="menu-grid">
+    <div class="dish-card reveal-scale" style="transition-delay:0.05s">
+      <div class="dish-card-img"><img src="uploads/484804359_1260022132502225_9002357013459047453_n.jpg" loading="lazy"></div>
+      <div class="dish-card-info">
+        <h3>Filé Grelhado Premium</h3>
+        <p>Corte nobre com purê trufado e legumes salteados</p>
+        <span class="dish-tag">Grelhados</span>
+      </div>
+    </div>
+    <div class="dish-card reveal-scale" style="transition-delay:0.1s">
+      <div class="dish-card-img"><img src="uploads/484457645_1257209296116842_4180192928181874170_n.jpg" loading="lazy"></div>
+      <div class="dish-card-info">
+        <h3>Costeletas de Cordeiro</h3>
+        <p>Corte premium com legumes baby e jus de carne</p>
+        <span class="dish-tag">Grelhados</span>
+      </div>
+    </div>
+    <div class="dish-card reveal-scale" style="transition-delay:0.15s">
+      <div class="dish-card-img"><img src="uploads/482225429_1257229656114806_8061117193943724354_n.jpg" loading="lazy"></div>
+      <div class="dish-card-info">
+        <h3>Frango com Purê</h3>
+        <p>Peito suculento com vegetais grelhados e molho especial</p>
+        <span class="dish-tag">Cozinha Internacional</span>
+      </div>
+    </div>
+    <div class="dish-card reveal-scale" style="transition-delay:0.2s">
+      <div class="dish-card-img"><img src="uploads/484820956_1261957092308729_1428777494545251595_n.jpg" loading="lazy"></div>
+      <div class="dish-card-info">
+        <h3>Camarão à Azzona</h3>
+        <p>Camarão grelhado com micro-ervas e azeite aromático</p>
+        <span class="dish-tag">Mariscos</span>
+      </div>
+    </div>
+    <div class="dish-card reveal-scale" style="transition-delay:0.25s">
+      <div class="dish-card-img"><img src="uploads/485004961_1263257902178648_6284640658343000025_n.jpg" loading="lazy"></div>
+      <div class="dish-card-info">
+        <h3>Camarão Wok</h3>
+        <p>Salteado com legumes asiáticos, sésamo e coentros</p>
+        <span class="dish-tag">Fusão</span>
+      </div>
+    </div>
+    <div class="dish-card reveal-scale" style="transition-delay:0.3s">
+      <div class="dish-card-img"><img src="uploads/484913423_1262837595554012_1331087500422327570_n.jpg" loading="lazy"></div>
+      <div class="dish-card-info">
+        <h3>Steak com Microgreens</h3>
+        <p>Filé suculento, molho mostarda e vegetais da estação</p>
+        <span class="dish-tag">Grelhados</span>
+      </div>
+    </div>
+    <div class="dish-card reveal-scale" style="transition-delay:0.35s">
+      <div class="dish-card-img"><img src="uploads/487126723_1269279344909837_4476153206961834787_n.jpg" loading="lazy"></div>
+      <div class="dish-card-info">
+        <h3>Espetada Especial</h3>
+        <p>Espetada de carne com arroz frito e ervas frescas</p>
+        <span class="dish-tag">Grelhados</span>
+      </div>
+    </div>
+    <div class="dish-card reveal-scale" style="transition-delay:0.4s">
+      <div class="dish-card-img"><img src="uploads/485694368_1262845265553245_3561934188606388695_n.jpg" loading="lazy"></div>
+      <div class="dish-card-info">
+        <h3>Brunch Bowl</h3>
+        <p>Batatas, salada fresca, ovo estrelado e tempero caseiro</p>
+        <span class="dish-tag">Breakfood</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PARALLAX BANNER -->
+<div class="parallax-banner" id="parallax1">
+  <div class="bg" style="background-image: url('uploads/467157185_18289906990234146_9164660595181843240_n.jpg')"></div>
+  <div class="overlay"></div>
+  <div class="content reveal-scale">
+    <h2>"A vida é demasiado curta para uma refeição <span>ordinária</span>"</h2>
+    <a href="#contact" class="btn-gold" style="margin-top:40px;">Reservar Mesa</a>
+  </div>
+</div>
+
+<!-- MORE DISHES ROW -->
+<section style="background: var(--dark);">
+  <div style="text-align:center;">
+    <div class="section-tag reveal">Bar & Cocktails</div>
+    <h2 class="section-title reveal">Sabores que <em style="font-style:italic;color:var(--gold)">contam</em></h2>
+  </div>
+  <div class="menu-grid" style="margin-top:48px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+    <div class="dish-card reveal-scale">
+      <div class="dish-card-img"><img src="uploads/00b60c2b-3c28-41c2-8202-af22d6f4cf57.jfif" loading="lazy"></div>
+      <div class="dish-card-info">
+        <h3>Cocktail de Assinatura</h3>
+        <p>Criações exclusivas com frutas tropicais de Moçambique</p>
+        <span class="dish-tag">Cocktails</span>
+      </div>
+    </div>
+    <div class="dish-card reveal-scale" style="transition-delay:0.1s">
+      <div class="dish-card-img"><img src="uploads/487296556_1271956371308801_3061308100768747555_n.jpg" loading="lazy"></div>
+      <div class="dish-card-info">
+        <h3>Caril Tradicional</h3>
+        <p>Receita local com arroz basmati e acompanhamentos</p>
+        <span class="dish-tag">Comfort Food</span>
+      </div>
+    </div>
+    <div class="dish-card reveal-scale" style="transition-delay:0.15s">
+      <div class="dish-card-img"><img src="uploads/486138178_1266690585168713_6342603078541105727_n.jpg" loading="lazy"></div>
+      <div class="dish-card-info">
+        <h3>Risoto & Sopa do Dia</h3>
+        <p>Sabores reconfortantes preparados com ingredientes frescos</p>
+        <span class="dish-tag">Comfort Food</span>
+      </div>
+    </div>
+    <div class="dish-card reveal-scale" style="transition-delay:0.2s">
+      <div class="dish-card-img"><img src="uploads/487201664_1271967264641045_1331682163481026793_n.jpg" loading="lazy"></div>
+      <div class="dish-card-info">
+        <h3>Porco Glaceado</h3>
+        <p>Com arroz selvagem, espinafre e molho agridoce</p>
+        <span class="dish-tag">Cozinha Internacional</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section id="gallery" style="background:var(--dark2);">
+  <div style="text-align:center; margin-bottom:24px;">
+    <div class="section-tag reveal">Galeria</div>
+    <h2 class="section-title reveal">As Nossas <em style="font-style:italic;color:var(--gold)">Vibes</em></h2>
+  </div>
+  <div class="gallery-grid">
+    <div class="gallery-item reveal-scale"><img src="uploads/482196354_1255347229636382_3687311378698216210_n.jpg" loading="lazy"></div>
+    <div class="gallery-item reveal-scale" style="transition-delay:0.07s"><img src="uploads/467157596_18290052322234146_6438367006322990335_n.jpg" loading="lazy"></div>
+    <div class="gallery-item reveal-scale" style="transition-delay:0.1s"><img src="uploads/467001139_18290052427234146_2692596507482639418_n.jpg" loading="lazy"></div>
+    <div class="gallery-item reveal-scale" style="transition-delay:0.13s"><img src="uploads/483097358_1255340166303755_8285685670537361622_n.jpg" loading="lazy"></div>
+    <div class="gallery-item reveal-scale" style="transition-delay:0.16s"><img src="uploads/467032021_18290052550234146_6578581328360495229_n.jpg" loading="lazy"></div>
+    <div class="gallery-item reveal-scale" style="transition-delay:0.19s"><img src="uploads/469737683_18293253454234146_7261720557772813125_n.jpg" loading="lazy"></div>
+    <div class="gallery-item reveal-scale" style="transition-delay:0.22s"><img src="uploads/487235741_1272101214627650_5561472342872506157_n.jpg" loading="lazy"></div>
+    <div class="gallery-item reveal-scale" style="transition-delay:0.25s"><img src="uploads/467156789_18290052445234146_2689811263306830889_n.jpg" loading="lazy"></div>
+    <div class="gallery-item reveal-scale" style="transition-delay:0.28s"><img src="uploads/b284881f-c7d0-4251-8d38-acbe9b084607.jfif" loading="lazy"></div>
+  </div>
+</section>
+
+<!-- PARALLAX 2 -->
+<div class="parallax-banner">
+  <div class="bg" style="background-image: url('uploads/484471297_1258320312672407_7533519604146987578_n.jpg')"></div>
+  <div class="overlay"></div>
+  <div class="content reveal-scale">
+    <h2>Social <span>Fridays</span> — Música ao vivo & cocktails de assinatura</h2>
+  </div>
+</div>
+
+<!-- DJ SECTION -->
+<section id="djs" style="background: var(--dark); overflow:hidden;">
+  <div style="text-align:center; margin-bottom:64px;">
+    <div class="section-tag reveal">Noites de Sexta</div>
+    <h2 class="section-title reveal">DJs <em style="font-style:italic;color:var(--gold)">Convidados</em></h2>
+    <p class="section-desc reveal" style="margin: 16px auto 0; text-align:center; max-width:520px;">
+      Os melhores selectors de Maputo e além. Cada sexta-feira, uma experiência sonora única.
+    </p>
+  </div>
+
+  <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:2px; margin-top:0;">
+    <div class="dj-card reveal-scale" style="transition-delay:0.05s">
+      <div class="dj-img">
+        <div class="dj-placeholder">
+          <svg viewBox="0 0 200 200" width="80" height="80"><circle cx="100" cy="100" r="80" fill="none" stroke="rgba(201,169,110,0.2)" stroke-width="1"/><circle cx="100" cy="100" r="40" fill="none" stroke="rgba(201,169,110,0.3)" stroke-width="1"/><circle cx="100" cy="100" r="8" fill="rgba(201,169,110,0.5)"/><line x1="100" y1="20" x2="100" y2="100" stroke="rgba(201,169,110,0.4)" stroke-width="1"/></svg>
+        </div>
+      </div>
+      <div class="dj-info">
+        <div class="dj-name">DJ Resident</div>
+        <div class="dj-genre">Afro House · Deep House</div>
+        <div class="dj-night">Toda Sexta-Feira</div>
+      </div>
+    </div>
+    <div class="dj-card reveal-scale" style="transition-delay:0.1s">
+      <div class="dj-img">
+        <div class="dj-placeholder">
+          <svg viewBox="0 0 200 200" width="80" height="80"><circle cx="100" cy="100" r="80" fill="none" stroke="rgba(201,169,110,0.2)" stroke-width="1"/><circle cx="100" cy="100" r="40" fill="none" stroke="rgba(201,169,110,0.3)" stroke-width="1"/><circle cx="100" cy="100" r="8" fill="rgba(201,169,110,0.5)"/><line x1="100" y1="20" x2="100" y2="100" stroke="rgba(201,169,110,0.4)" stroke-width="1"/></svg>
+        </div>
+      </div>
+      <div class="dj-info">
+        <div class="dj-name">Guest DJ</div>
+        <div class="dj-genre">Tech House · Minimal</div>
+        <div class="dj-night">Convidado Especial</div>
+      </div>
+    </div>
+    <div class="dj-card reveal-scale" style="transition-delay:0.15s">
+      <div class="dj-img">
+        <div class="dj-placeholder">
+          <svg viewBox="0 0 200 200" width="80" height="80"><circle cx="100" cy="100" r="80" fill="none" stroke="rgba(201,169,110,0.2)" stroke-width="1"/><circle cx="100" cy="100" r="40" fill="none" stroke="rgba(201,169,110,0.3)" stroke-width="1"/><circle cx="100" cy="100" r="8" fill="rgba(201,169,110,0.5)"/><line x1="100" y1="20" x2="100" y2="100" stroke="rgba(201,169,110,0.4)" stroke-width="1"/></svg>
+        </div>
+      </div>
+      <div class="dj-info">
+        <div class="dj-name">International</div>
+        <div class="dj-genre">House · Nu-Disco</div>
+        <div class="dj-night">Noite Especial</div>
+      </div>
+    </div>
+    <div class="dj-card reveal-scale" style="transition-delay:0.2s">
+      <div class="dj-img">
+        <div class="dj-placeholder">
+          <svg viewBox="0 0 200 200" width="80" height="80"><circle cx="100" cy="100" r="80" fill="none" stroke="rgba(201,169,110,0.2)" stroke-width="1"/><circle cx="100" cy="100" r="40" fill="none" stroke="rgba(201,169,110,0.3)" stroke-width="1"/><circle cx="100" cy="100" r="8" fill="rgba(201,169,110,0.5)"/><line x1="100" y1="20" x2="100" y2="100" stroke="rgba(201,169,110,0.4)" stroke-width="1"/></svg>
+        </div>
+      </div>
+      <div class="dj-info">
+        <div class="dj-name">Sunset Set</div>
+        <div class="dj-genre">Melodic House · Organic</div>
+        <div class="dj-night">Sábado Especial</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vinyl animation -->
+  <div style="display:flex; align-items:center; justify-content:center; gap:48px; padding:80px 64px 40px; flex-wrap:wrap;">
+    <div class="vinyl-spin">
+      <svg viewBox="0 0 200 200" width="160" height="160">
+        <circle cx="100" cy="100" r="98" fill="#111"/>
+        <circle cx="100" cy="100" r="98" fill="none" stroke="rgba(201,169,110,0.06)" stroke-width="8"/>
+        <circle cx="100" cy="100" r="82" fill="none" stroke="#1a1a1a" stroke-width="1"/>
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#1a1a1a" stroke-width="1"/>
+        <circle cx="100" cy="100" r="58" fill="none" stroke="#1a1a1a" stroke-width="1"/>
+        <circle cx="100" cy="100" r="46" fill="none" stroke="#1a1a1a" stroke-width="1"/>
+        <circle cx="100" cy="100" r="34" fill="#1e1e1e"/>
+        <circle cx="100" cy="100" r="22" fill="#C9A96E" opacity="0.15"/>
+        <circle cx="100" cy="100" r="8" fill="#C9A96E" opacity="0.6"/>
+        <text x="100" y="104" text-anchor="middle" font-size="5" fill="rgba(201,169,110,0.5)" font-family="Syne,sans-serif" letter-spacing="2">AZZONA</text>
+      </svg>
+    </div>
+    <div>
+      <div class="section-tag" style="margin-bottom:12px;">Now Playing</div>
+      <div style="font-family:'Playfair Display',serif; font-size:clamp(24px,3vw,40px); font-weight:400;">Azzona House <em style="color:var(--gold);font-style:italic;">Session</em></div>
+      <div style="font-family:'Syne',sans-serif; font-size:12px; letter-spacing:4px; color:var(--text); margin-top:12px; text-transform:uppercase;">124 BPM · Elegant House</div>
+      <div style="display:flex; gap:16px; margin-top:28px; align-items:center;">
+        <button id="musicToggle" onclick="toggleMusic()" style="background:var(--gold); border:none; color:var(--dark); padding:14px 32px; font-family:'Syne',sans-serif; font-size:11px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:all 0.3s;">
+          ▐▐ Pause
+        </button>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-family:'Syne',sans-serif; font-size:10px; letter-spacing:2px; color:var(--text); text-transform:uppercase;">Vol</span>
+          <input type="range" id="volSlider" min="0" max="1" step="0.01" value="0.35" oninput="setVolume(this.value)" style="width:100px; accent-color:var(--gold); cursor:pointer;">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact-section" id="contact">
+  <div>
+    <div class="section-tag reveal">Horário</div>
+    <h2 class="section-title reveal">Quando nos <em style="font-style:italic;color:var(--gold)">visitar</em></h2>
+    <ul class="hours-list reveal">
+      <li><strong>Segunda — Quinta</strong>&ensp; 10:00 – 23:00</li>
+      <li><strong>Sexta — Sábado</strong>&ensp; 07:30 – 23:00+</li>
+      <li><strong>Domingo</strong>&ensp; 07:30 – 22:00</li>
+    </ul>
+  </div>
+  <div>
+    <div class="section-tag reveal">Contacto</div>
+    <h2 class="section-title reveal">Reserve a sua <em style="font-style:italic;color:var(--gold)">mesa</em></h2>
+    <div class="contact-info reveal">
+      <a href="tel:+258852633403">+258 85 263 3403</a>
+      <a href="tel:+258852216334">+258 85 221 63 34</a>
+      <a href="https://instagram.com/azzona.mz" target="_blank">@azzona.mz</a>
+    </div>
+    <p class="contact-address reveal">
+      Rua Mateus Sansão Muthemba,<br>
+      Polana Cimento A, Maputo<br>
+      <span style="color:var(--gold);font-size:14px;font-family:'Syne',sans-serif;letter-spacing:2px;text-transform:uppercase;margin-top:8px;display:inline-block;">Moçambique</span>
+    </p>
+    <a href="tel:+258852633403" class="btn-gold">Ligar Agora</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot-logo">AZZONA</div>
+  <div class="foot-copy">© 2026 Azzona · Maputo</div>
+  <div class="foot-social">
+    <a href="https://instagram.com/azzona.mz" target="_blank">Instagram</a>
+    <a href="https://facebook.com/AzzonaBreakfood" target="_blank">Facebook</a>
+  </div>
+</footer>
+
+<script>
+// ── HOUSE MUSIC ENGINE ── 124 BPM ──────────────────────────────
+let audioCtx = null, masterGain = null, isPlaying = false, schedulerTimer = null;
+let currentBeat = 0, nextBeatTime = 0;
+const BPM = 124, BEAT = 60 / BPM;
+
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.35;
+  masterGain.connect(audioCtx.destination);
+}
+
+function noise(dur) {
+  const bufSize = audioCtx.sampleRate * dur;
+  const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) d[i] = Math.random() * 2 - 1;
+  return buf;
+}
+
+function kick(t) {
+  // Punchy sub kick
+  const o = audioCtx.createOscillator();
+  const o2 = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  const dist = audioCtx.createWaveShaper();
+  const curve = new Float32Array(256);
+  for (let i = 0; i < 256; i++) { const x = (i * 2) / 256 - 1; curve[i] = x < 0 ? -Math.pow(-x, 0.6) : Math.pow(x, 0.6); }
+  dist.curve = curve;
+  o.frequency.setValueAtTime(200, t);
+  o.frequency.exponentialRampToValueAtTime(45, t + 0.08);
+  o2.type = 'sine'; o2.frequency.setValueAtTime(60, t);
+  const g2 = audioCtx.createGain(); g2.gain.value = 0.4;
+  o.connect(dist); dist.connect(g);
+  o2.connect(g2); g2.connect(g);
+  g.connect(masterGain);
+  g.gain.setValueAtTime(1.5, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+  o.start(t); o2.start(t); o.stop(t + 0.41); o2.stop(t + 0.41);
+}
+
+function hihat(t, open = false, accent = false) {
+  const src = audioCtx.createBufferSource();
+  src.buffer = noise(open ? 0.35 : 0.06);
+  const hpf = audioCtx.createBiquadFilter();
+  hpf.type = 'highpass'; hpf.frequency.value = open ? 6000 : 9000;
+  const g = audioCtx.createGain();
+  const vol = accent ? (open ? 0.22 : 0.18) : (open ? 0.14 : 0.1);
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + (open ? 0.28 : 0.05));
+  src.connect(hpf); hpf.connect(g); g.connect(masterGain);
+  src.start(t); src.stop(t + (open ? 0.3 : 0.07));
+}
+
+function clap(t) {
+  // Layered snappy clap
+  for (let i = 0; i < 3; i++) {
+    const src = audioCtx.createBufferSource();
+    src.buffer = noise(0.12);
+    const bpf = audioCtx.createBiquadFilter();
+    bpf.type = 'bandpass'; bpf.frequency.value = 900 + i * 400; bpf.Q.value = 0.8;
+    const g = audioCtx.createGain();
+    const delay = i * 0.008;
+    g.gain.setValueAtTime(0, t + delay);
+    g.gain.linearRampToValueAtTime(0.55, t + delay + 0.003);
+    g.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.15);
+    src.connect(bpf); bpf.connect(g); g.connect(masterGain);
+    src.start(t + delay); src.stop(t + delay + 0.2);
+  }
+}
+
+function perc(t) {
+  // Rimshot/shaker for groove
+  const src = audioCtx.createBufferSource();
+  src.buffer = noise(0.04);
+  const hpf = audioCtx.createBiquadFilter();
+  hpf.type = 'highpass'; hpf.frequency.value = 5000;
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.07, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+  src.connect(hpf); hpf.connect(g); g.connect(masterGain);
+  src.start(t); src.stop(t + 0.05);
+}
+
+function midiToHz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+
+// Pumping house bass line
+const bassNotes = [41, 41, 46, 41, 44, 44, 48, 46];
+function bass(t, beat) {
+  const note = bassNotes[beat % bassNotes.length];
+  const o = audioCtx.createOscillator();
+  const o2 = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  const lpf = audioCtx.createBiquadFilter();
+  lpf.type = 'lowpass';
+  lpf.frequency.setValueAtTime(600, t);
+  lpf.frequency.exponentialRampToValueAtTime(200, t + BEAT * 0.3);
+  o.type = 'sawtooth'; o.frequency.value = midiToHz(note);
+  o2.type = 'sawtooth'; o2.frequency.value = midiToHz(note); o2.detune.value = 7;
+  const g2 = audioCtx.createGain(); g2.gain.value = 0.5;
+  o.connect(lpf); o2.connect(g2); g2.connect(lpf); lpf.connect(g); g.connect(masterGain);
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(0.7, t + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.001, t + BEAT * 0.7);
+  o.start(t); o2.start(t); o.stop(t + BEAT); o2.stop(t + BEAT);
+}
+
+// Chord stab — house piano-style
+const stabChords = [
+  [53, 57, 60, 65], // Fm
+  [51, 56, 58, 63], // Eb
+  [48, 53, 55, 60], // Cm
+  [56, 60, 63, 68], // Ab
+];
+function stab(t, bar) {
+  const chord = stabChords[bar % stabChords.length];
+  chord.forEach(note => {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sawtooth';
+    o.frequency.value = midiToHz(note);
+    o.detune.value = (Math.random() - 0.5) * 10;
+    const lpf = audioCtx.createBiquadFilter();
+    lpf.type = 'lowpass';
+    lpf.frequency.setValueAtTime(3000, t);
+    lpf.frequency.exponentialRampToValueAtTime(800, t + 0.2);
+    g.gain.setValueAtTime(0.09, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    o.connect(lpf); lpf.connect(g); g.connect(masterGain);
+    o.start(t); o.stop(t + 0.3);
+  });
+}
+
+// Warm pad underneath
+const padChords = [
+  [41, 48, 53, 56],
+  [39, 46, 51, 54],
+  [36, 43, 48, 51],
+  [44, 51, 56, 59],
+];
+function pad(t, bar) {
+  const chord = padChords[bar % padChords.length];
+  chord.forEach(note => {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sine';
+    o.frequency.value = midiToHz(note + 12);
+    o.detune.value = (Math.random() - 0.5) * 6;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.03, t + 0.8);
+    g.gain.linearRampToValueAtTime(0.025, t + BEAT * 7);
+    g.gain.linearRampToValueAtTime(0, t + BEAT * 8);
+    o.connect(g); g.connect(masterGain);
+    o.start(t); o.stop(t + BEAT * 8);
+  });
+}
+
+function scheduleBeat() {
+  while (nextBeatTime < audioCtx.currentTime + 0.3) {
+    const b = currentBeat;
+    const t = nextBeatTime;
+    const step = b % 16; // 16th-note steps
+
+    // Four-on-the-floor kick (every 4 steps = quarter note)
+    if (step % 4 === 0) kick(t);
+
+    // Clap on 2 and 4 (steps 4 and 12)
+    if (step === 4 || step === 12) clap(t);
+
+    // Hats: every step, accented on even, open on step 8
+    if (step % 2 === 0) hihat(t, step === 8, step % 4 === 0);
+    else hihat(t, false, false);
+
+    // Extra shaker offbeats for groove
+    if (step % 4 === 2) perc(t);
+
+    // Bass every 2 steps (8th note groove)
+    if (step % 2 === 0) bass(t, Math.floor(b / 2));
+
+    // Chord stab: on step 0 and step 10 for syncopation
+    if (step === 0 || step === 10) stab(t, Math.floor(b / 16));
+
+    // Pad: every 16 steps (one bar)
+    if (b % 16 === 0) pad(t, Math.floor(b / 16));
+
+    currentBeat++;
+    nextBeatTime += BEAT / 4; // 16th-note grid
+  }
+  schedulerTimer = setTimeout(scheduleBeat, 60);
+}
+
+function startMusic() {
+  initAudio();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  currentBeat = 0;
+  nextBeatTime = audioCtx.currentTime + 0.1;
+  scheduleBeat();
+  isPlaying = true;
+  document.getElementById('musicBar').classList.add('visible');
+  document.getElementById('barEq').classList.remove('paused');
+  const btn = document.getElementById('musicToggle');
+  if (btn) btn.textContent = '▐▐ Pause';
+  const bBtn = document.getElementById('barToggleBtn');
+  if (bBtn) bBtn.textContent = '▐▐ Pause';
+}
+
+function stopMusic() {
+  clearTimeout(schedulerTimer);
+  isPlaying = false;
+  document.getElementById('barEq').classList.add('paused');
+  const btn = document.getElementById('musicToggle');
+  if (btn) btn.textContent = '▶ Play';
+  const bBtn = document.getElementById('barToggleBtn');
+  if (bBtn) bBtn.textContent = '▶ Play';
+  if (audioCtx) audioCtx.suspend();
+}
+
+function toggleMusic() {
+  if (isPlaying) stopMusic(); else startMusic();
+}
+
+function setVolume(v) {
+  if (masterGain) masterGain.gain.value = parseFloat(v);
+  document.getElementById('volSlider') && (document.getElementById('volSlider').value = v);
+  document.getElementById('volSliderBar') && (document.getElementById('volSliderBar').value = v);
+}
+
+// Autoplay on first interaction
+let musicStarted = false;
+function tryAutoplay() {
+  if (!musicStarted) { musicStarted = true; startMusic(); }
+  document.removeEventListener('click', tryAutoplay);
+  document.removeEventListener('scroll', tryAutoplay);
+  document.removeEventListener('touchstart', tryAutoplay);
+}
+// Try direct autoplay first
+window.addEventListener('load', () => {
+  try {
+    startMusic();
+    musicStarted = true;
+  } catch(e) {
+    document.addEventListener('click', tryAutoplay);
+    document.addEventListener('scroll', tryAutoplay, { passive: true });
+    document.addEventListener('touchstart', tryAutoplay, { passive: true });
+  }
+});
+
+// ── END MUSIC ENGINE ──────────────────────────────────────────
+
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-scale, .img-reveal').forEach(el => observer.observe(el));
+
+// Nav scroll
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 80);
+}, { passive: true });
+
+// Hero load
+setTimeout(() => document.querySelector('.hero').classList.add('loaded'), 100);
+
+// Parallax
+const parallaxBgs = document.querySelectorAll('.parallax-banner .bg');
+window.addEventListener('scroll', () => {
+  parallaxBgs.forEach(bg => {
+    const rect = bg.parentElement.getBoundingClientRect();
+    const speed = 0.3;
+    const y = rect.top * speed;
+    bg.style.transform = `translateY(${y}px)`;
+  });
+}, { passive: true });
+</script>
+
+</body>
+</html>

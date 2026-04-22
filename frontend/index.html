@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AZZONA — Maputo's Finest</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        gold: '#C9A96E',
+        'gold-light': '#E2C992',
+        dark:  '#0A0A0A',
+        dark2: '#111111',
+        dark3: '#1A1A1A',
+        cream: '#F5F0E8',
+        muted: '#B8B0A0',
+      },
+      fontFamily: {
+        playfair:  ['"Playfair Display"', 'serif'],
+        cormorant: ['"Cormorant Garamond"', 'serif'],
+        syne:      ['Syne', 'sans-serif'],
+      },
+    }
+  }
+}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { -webkit-font-smoothing: antialiased; }
+
+/* ── Scroll Reveal ── */
+.reveal       { opacity:0; transform:translateY(60px);  transition:opacity 1s cubic-bezier(.16,1,.3,1), transform 1s cubic-bezier(.16,1,.3,1); }
+.reveal-left  { opacity:0; transform:translateX(-80px); transition:opacity 1s cubic-bezier(.16,1,.3,1), transform 1s cubic-bezier(.16,1,.3,1); }
+.reveal-right { opacity:0; transform:translateX(80px);  transition:opacity 1s cubic-bezier(.16,1,.3,1), transform 1s cubic-bezier(.16,1,.3,1); }
+.reveal-scale { opacity:0; transform:scale(0.88);       transition:opacity 1s cubic-bezier(.16,1,.3,1), transform 1s cubic-bezier(.16,1,.3,1); }
+.reveal.visible, .reveal-left.visible, .reveal-right.visible { opacity:1; transform:translate(0); }
+.reveal-scale.visible { opacity:1; transform:scale(1); }
+
+/* ── Image curtain reveal ── */
+.img-reveal { position:relative; overflow:hidden; }
+.img-reveal::before {
+  content:''; position:absolute; inset:0; background:#0A0A0A; z-index:2;
+  transform-origin:right; transition:transform 1s cubic-bezier(.77,0,.175,1);
+}
+.img-reveal.visible::before { transform:scaleX(0); }
+
+/* ── Keyframes ── */
+@keyframes fadeUp      { to { opacity:1; transform:translateY(0); } }
+@keyframes scrollPulse { 0%,100% { opacity:.3; transform:scaleY(.5); } 50% { opacity:1; transform:scaleY(1); } }
+@keyframes marqueeScroll { to { transform:translateX(-50%); } }
+@keyframes eqBounce    { from { transform:scaleY(.4); } to { transform:scaleY(1); } }
+@keyframes vinylRotate { to { transform:rotate(360deg); } }
+@keyframes pulse       { 0%,100%{opacity:.6} 50%{opacity:1} }
+
+/* ── Marquee ── */
+.marquee-track { display:flex; gap:64px; animation:marqueeScroll 28s linear infinite; white-space:nowrap; width:max-content; }
+
+/* ── Nav scrolled ── */
+nav.scrolled { background:rgba(10,10,10,.94) !important; backdrop-filter:blur(20px); }
+nav.scrolled { -webkit-backdrop-filter:blur(20px); }
+
+/* ── Hero ── */
+.hero-bg { transform:scale(1.1); transition:transform 8s cubic-bezier(.16,1,.3,1); }
+.hero.loaded .hero-bg { transform:scale(1); }
+.hero-tag  { opacity:0; transform:translateY(30px); animation:fadeUp 1s .5s forwards; }
+.hero-h1   { opacity:0; transform:translateY(40px); animation:fadeUp 1.2s .7s forwards; }
+.hero-sub  { opacity:0; transform:translateY(30px); animation:fadeUp 1s 1s forwards; }
+.hero-scroll { opacity:0; animation:fadeUp 1s 1.5s forwards; }
+
+/* ── Dish card ── */
+.dish-card { background:#1A1A1A; overflow:hidden; cursor:pointer; transition:transform .6s cubic-bezier(.16,1,.3,1), box-shadow .6s; }
+.dish-card:hover { transform:translateY(-8px); box-shadow:0 32px 64px rgba(0,0,0,.5); }
+.dish-card-img { aspect-ratio:1; overflow:hidden; }
+.dish-card-img img { width:100%; height:100%; object-fit:cover; transition:transform 1.2s cubic-bezier(.16,1,.3,1); }
+.dish-card:hover .dish-card-img img { transform:scale(1.08); }
+
+/* ── Filter buttons ── */
+.filter-btn { border:1px solid rgba(201,169,110,.25); color:#B8B0A0; transition:all .3s; }
+.filter-btn:hover, .filter-btn.active { background:#C9A96E; border-color:#C9A96E; color:#0A0A0A; }
+
+/* ── Gallery ── */
+.gallery-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.gallery-item { overflow:hidden; position:relative; cursor:pointer; aspect-ratio:1; }
+.gallery-item:nth-child(1) { grid-column:span 2; aspect-ratio:2/1; }
+.gallery-item:nth-child(4) { grid-column:span 2; aspect-ratio:2/1; }
+.gallery-item:nth-child(7) { grid-column:span 2; aspect-ratio:2/1; }
+.gallery-item img { width:100%; height:100%; object-fit:cover; transition:transform 1.5s cubic-bezier(.16,1,.3,1); }
+.gallery-item:hover img { transform:scale(1.06); }
+.gallery-item::after { content:''; position:absolute; inset:0; background:linear-gradient(to top,rgba(10,10,10,.5),transparent); opacity:0; transition:opacity .5s; }
+.gallery-item:hover::after { opacity:1; }
+
+/* ── Parallax banner ── */
+.parallax-banner { height:70vh; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.parallax-bg { position:absolute; inset:-20%; background-size:cover; background-position:center; will-change:transform; }
+
+/* ── Music Bar ── */
+#musicBar { position:fixed; bottom:0; left:0; right:0; z-index:200; background:rgba(10,10,10,.96); border-top:1px solid rgba(201,169,110,.15); display:flex; align-items:center; gap:20px; padding:12px 32px; transform:translateY(100%); transition:transform .6s cubic-bezier(.16,1,.3,1); }
+#musicBar.visible { transform:translateY(0); }
+.bar-eq { display:flex; gap:3px; align-items:flex-end; height:20px; }
+.bar-eq span { width:3px; background:#C9A96E; border-radius:2px; animation:eqBounce .6s ease infinite alternate; }
+.bar-eq span:nth-child(1){height:8px;animation-delay:0s}
+.bar-eq span:nth-child(2){height:16px;animation-delay:.1s}
+.bar-eq span:nth-child(3){height:12px;animation-delay:.2s}
+.bar-eq span:nth-child(4){height:20px;animation-delay:.15s}
+.bar-eq span:nth-child(5){height:10px;animation-delay:.05s}
+.bar-eq.paused span { animation-play-state:paused; opacity:.3; }
+
+/* ── Vinyl ── */
+.vinyl-svg { animation:vinylRotate 3s linear infinite; filter:drop-shadow(0 0 24px rgba(201,169,110,.15)); }
+
+/* ── Form fields ── */
+.field { width:100%; background:#111; border:1px solid rgba(201,169,110,.2); color:#F5F0E8; padding:14px 18px; font-family:'Cormorant Garamond',serif; font-size:18px; outline:none; transition:border-color .3s; }
+.field:focus { border-color:#C9A96E; }
+.field::placeholder { color:#B8B0A0; }
+
+/* ── Skeleton ── */
+@keyframes shimmer { to { background-position:200% 0; } }
+.skeleton { background:linear-gradient(90deg,#1A1A1A 25%,#222 50%,#1A1A1A 75%); background-size:200%; animation:shimmer 1.4s infinite; }
+
+/* ── Responsive ── */
+@media(max-width:768px){
+  .gallery-grid { grid-template-columns:1fr 1fr; }
+  .gallery-item:nth-child(1),.gallery-item:nth-child(4),.gallery-item:nth-child(7) { grid-column:span 2; aspect-ratio:2/1; }
+}
+@media(max-width:480px){
+  .gallery-grid { grid-template-columns:1fr; }
+  .gallery-item:nth-child(n) { grid-column:span 1; aspect-ratio:4/3; }
+}
+</style>
+</head>
+<body class="bg-dark text-cream font-cormorant overflow-x-hidden">
+
+<!-- ══════════════ MUSIC BAR ══════════════ -->
+<div id="musicBar">
+  <div class="bar-eq" id="barEq">
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+  <span class="font-syne text-[10px] tracking-[3px] uppercase text-gold">Azzona House Session</span>
+  <span class="font-syne text-[10px] tracking-[2px] text-muted">· 124 BPM</span>
+  <div class="flex-1"></div>
+  <input type="range" id="volSliderBar" min="0" max="1" step="0.01" value="0.35"
+    oninput="setVolume(this.value)"
+    class="w-20 cursor-pointer accent-gold">
+  <button onclick="toggleMusic()" id="barToggleBtn"
+    class="border border-gold/30 text-gold px-4 py-1.5 font-syne text-[10px] tracking-[2px] uppercase hover:bg-gold hover:text-dark transition-all">
+    ▐▐ Pause
+  </button>
+</div>
+
+<!-- ══════════════ NAV ══════════════ -->
+<nav id="nav" class="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-12 py-6 transition-all duration-500"
+  style="background:linear-gradient(to bottom,rgba(10,10,10,.9),transparent)">
+  <div class="font-syne text-2xl font-bold tracking-[8px] text-gold uppercase">Azzona</div>
+  <ul class="hidden md:flex gap-9 list-none">
+    <li><a href="#about"  class="font-syne text-xs tracking-[3px] uppercase text-cream hover:text-gold transition-colors relative group">O Espaço<span class="absolute -bottom-1 left-0 w-0 h-px bg-gold transition-all duration-300 group-hover:w-full"></span></a></li>
+    <li><a href="#menu"   class="font-syne text-xs tracking-[3px] uppercase text-cream hover:text-gold transition-colors relative group">Menu<span class="absolute -bottom-1 left-0 w-0 h-px bg-gold transition-all duration-300 group-hover:w-full"></span></a></li>
+    <li><a href="#vibes"  class="font-syne text-xs tracking-[3px] uppercase text-cream hover:text-gold transition-colors relative group">Vibes<span class="absolute -bottom-1 left-0 w-0 h-px bg-gold transition-all duration-300 group-hover:w-full"></span></a></li>
+    <li><a href="#reserva" class="font-syne text-xs tracking-[3px] uppercase text-cream hover:text-gold transition-colors relative group">Reservas<span class="absolute -bottom-1 left-0 w-0 h-px bg-gold transition-all duration-300 group-hover:w-full"></span></a></li>
+    <li><a href="#contact" class="font-syne text-xs tracking-[3px] uppercase text-cream hover:text-gold transition-colors relative group">Contacto<span class="absolute -bottom-1 left-0 w-0 h-px bg-gold transition-all duration-300 group-hover:w-full"></span></a></li>
+  </ul>
+  <button onclick="document.getElementById('reserva').scrollIntoView({behavior:'smooth'})"
+    class="font-syne text-[11px] tracking-[3px] uppercase bg-gold text-dark px-7 py-3 hover:bg-gold-light transition-all hover:-translate-y-0.5">
+    Reservar
+  </button>
+</nav>
+
+<!-- ══════════════ HERO ══════════════ -->
+<section id="hero" class="hero h-screen relative flex items-end overflow-hidden">
+  <div class="hero-bg absolute inset-0 bg-cover bg-center"
+    style="background-image:url('/img/HERO IMAGE.jpg')"></div>
+  <div class="absolute inset-0"
+    style="background:linear-gradient(to top,rgba(10,10,10,1) 0%,rgba(10,10,10,.4) 40%,rgba(10,10,10,.2) 70%,rgba(10,10,10,.5) 100%)"></div>
+  <div class="relative z-10 px-16 pb-20 max-w-3xl">
+    <div class="hero-tag font-syne text-[11px] tracking-[6px] uppercase text-gold mb-6">
+      Bistro · Coffee · Lounge — Maputo
+    </div>
+    <h1 class="hero-h1 font-playfair font-normal leading-[1.05]" style="font-size:clamp(48px,7vw,96px)">
+      The Best Food<br>&amp; Best <em class="italic text-gold">Vibes</em>
+    </h1>
+    <p class="hero-sub text-xl text-muted mt-6 leading-relaxed font-light">
+      No coração da Polana, onde a gastronomia internacional encontra a alma de Moçambique.
+    </p>
+  </div>
+  <div class="hero-scroll absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
+    <span class="font-syne text-[10px] tracking-[4px] uppercase text-gold">Scroll</span>
+    <div class="w-px h-12 bg-gold" style="animation:scrollPulse 2s infinite"></div>
+  </div>
+</section>
+
+<!-- ══════════════ MARQUEE ══════════════ -->
+<div class="overflow-hidden py-10 border-t border-b border-gold/10">
+  <div class="marquee-track">
+    <span class="font-playfair italic text-gold/15" style="font-size:clamp(36px,5vw,72px)">Breakfood</span><span class="text-gold/40 self-center">◆</span>
+    <span class="font-playfair italic text-gold/15" style="font-size:clamp(36px,5vw,72px)">Brunch</span><span class="text-gold/40 self-center">◆</span>
+    <span class="font-playfair italic text-gold/15" style="font-size:clamp(36px,5vw,72px)">Cocktails</span><span class="text-gold/40 self-center">◆</span>
+    <span class="font-playfair italic text-gold/15" style="font-size:clamp(36px,5vw,72px)">Fine Dining</span><span class="text-gold/40 self-center">◆</span>
+    <span class="font-playfair italic text-gold/15" style="font-size:clamp(36px,5vw,72px)">Social Fridays</span><span class="text-gold/40 self-center">◆</span>
+    <span class="font-playfair italic text-gold/15" style="font-size:clamp(36px,5vw,72px)">Lounge</span><span class="text-gold/40 self-center">◆</span>
+    <!-- duplicate for seamless loop -->
+    <span class="font-playfair italic text-gold/15" style="font-size:clamp(36px,5vw,72px)">Breakfood</span><span class="text-gold/40 self-center">◆</span>
+    <span class="font-playfair italic text-gold/15" style="font-size:clamp(36px,5vw,72px)">Brunch</span><span class="text-gold/40 self-center">◆</span>
+    <span class="font-playfair italic text-gold/15" style="font-size:clamp(36px,5vw,72px)">Cocktails</span><span class="text-gold/40 self-center">◆</span>
+    <span class="font-playfair italic text-gold/15" style="font-size:clamp(36px,5vw,72px)">Fine Dining</span><span class="text-gold/40 self-center">◆</span>
+    <span class="font-playfair italic text-gold/15" style="font-size:clamp(36px,5vw,72px)">Social Fridays</span><span class="text-gold/40 self-center">◆</span>
+    <span class="font-playfair italic text-gold/15" style="font-size:clamp(36px,5vw,72px)">Lounge</span><span class="text-gold/40 self-center">◆</span>
+  </div>
+</div>
+
+<!-- ══════════════ ABOUT ══════════════ -->
+<section id="about" class="grid md:grid-cols-2 gap-20 items-center px-16 py-40">
+  <div class="about-img relative overflow-hidden reveal-left img-reveal" style="aspect-ratio:3/4">
+    <img src="/img/vibes/482196354_1255347229636382_3687311378698216210_n.jpg"
+      alt="Azzona — o espaço"
+      class="w-full h-full object-cover transition-transform duration-[1500ms] hover:scale-105">
+    <div class="absolute pointer-events-none border border-gold/30"
+      style="top:-16px;left:-16px;right:16px;bottom:16px"></div>
+  </div>
+  <div class="reveal-right">
+    <div class="font-syne text-[11px] tracking-[6px] uppercase text-gold mb-4">O Espaço</div>
+    <h2 class="font-playfair font-normal leading-tight mb-6" style="font-size:clamp(36px,5vw,64px)">
+      Onde cada detalhe<br>conta uma <em class="italic text-gold">história</em>
+    </h2>
+    <p class="text-xl text-muted leading-relaxed font-light max-w-lg mb-4">
+      Azzona é mais do que um restaurante — é uma experiência sensorial. Da esplanada arejada ideal
+      para o clima tropical de Maputo, ao interior com design sofisticado, cada canto foi pensado
+      para criar momentos inesquecíveis.
+    </p>
+    <p class="text-xl text-muted leading-relaxed font-light max-w-lg">
+      Perfeito para reuniões de trabalho de manhã, almoços em família ou as vibrantes
+      Social Fridays com música ao vivo.
+    </p>
+    <a href="#menu"
+      class="inline-block mt-8 font-syne text-[11px] tracking-[4px] uppercase text-gold border border-gold px-10 py-4 hover:bg-gold hover:text-dark transition-all">
+      Explorar o Menu
+    </a>
+  </div>
+</section>
+
+<!-- Divider -->
+<div class="flex items-center gap-6 px-16 reveal">
+  <div class="flex-1 h-px opacity-30" style="background:linear-gradient(to right,transparent,#C9A96E,transparent)"></div>
+  <div class="w-2 h-2 bg-gold rotate-45 opacity-60"></div>
+  <div class="flex-1 h-px opacity-30" style="background:linear-gradient(to right,transparent,#C9A96E,transparent)"></div>
+</div>
+
+<!-- ══════════════ MENU ══════════════ -->
+<section id="menu" class="px-16 py-28" style="background:#111111">
+  <div class="text-center mb-12">
+    <div class="font-syne text-[11px] tracking-[6px] uppercase text-gold mb-4 reveal">A Nossa Cozinha</div>
+    <h2 class="font-playfair font-normal reveal" style="font-size:clamp(36px,5vw,64px)">
+      Pratos de <em class="italic text-gold">Assinatura</em>
+    </h2>
+    <p class="text-xl text-muted mt-4 font-light reveal">Cozinha internacional com raízes locais — cada prato é uma obra de arte.</p>
+  </div>
+
+  <!-- Category filters -->
+  <div id="menuFilters" class="flex gap-3 justify-center flex-wrap mb-12 reveal">
+    <button class="filter-btn active font-syne text-[10px] tracking-[3px] uppercase px-6 py-2" data-category="all">Todos</button>
+    <button class="filter-btn font-syne text-[10px] tracking-[3px] uppercase px-6 py-2" data-category="Grelhados">Grelhados</button>
+    <button class="filter-btn font-syne text-[10px] tracking-[3px] uppercase px-6 py-2" data-category="Mariscos">Mariscos</button>
+    <button class="filter-btn font-syne text-[10px] tracking-[3px] uppercase px-6 py-2" data-category="Breakfood">Breakfood</button>
+    <button class="filter-btn font-syne text-[10px] tracking-[3px] uppercase px-6 py-2" data-category="Internacional">Internacional</button>
+    <button class="filter-btn font-syne text-[10px] tracking-[3px] uppercase px-6 py-2" data-category="Comfort Food">Comfort Food</button>
+    <button class="filter-btn font-syne text-[10px] tracking-[3px] uppercase px-6 py-2" data-category="Cocktails">Cocktails</button>
+  </div>
+
+  <!-- Menu grid — populated by menu.js -->
+  <div id="menuGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+    <!-- Skeleton placeholders -->
+    <div class="dish-card"><div class="dish-card-img skeleton"></div><div class="p-6 space-y-3"><div class="skeleton h-4 rounded w-3/4"></div><div class="skeleton h-3 rounded w-full"></div><div class="skeleton h-3 rounded w-1/2"></div></div></div>
+    <div class="dish-card"><div class="dish-card-img skeleton"></div><div class="p-6 space-y-3"><div class="skeleton h-4 rounded w-3/4"></div><div class="skeleton h-3 rounded w-full"></div><div class="skeleton h-3 rounded w-1/2"></div></div></div>
+    <div class="dish-card"><div class="dish-card-img skeleton"></div><div class="p-6 space-y-3"><div class="skeleton h-4 rounded w-3/4"></div><div class="skeleton h-3 rounded w-full"></div><div class="skeleton h-3 rounded w-1/2"></div></div></div>
+    <div class="dish-card"><div class="dish-card-img skeleton"></div><div class="p-6 space-y-3"><div class="skeleton h-4 rounded w-3/4"></div><div class="skeleton h-3 rounded w-full"></div><div class="skeleton h-3 rounded w-1/2"></div></div></div>
+  </div>
+</section>
+
+<!-- ══════════════ PARALLAX 1 ══════════════ -->
+<div class="parallax-banner">
+  <div class="parallax-bg" id="pb1" style="background-image:url('/img/467157185_18289906990234146_9164660595181843240_n.jpg')"></div>
+  <div class="absolute inset-0" style="background:rgba(10,10,10,.62)"></div>
+  <div class="relative z-10 text-center max-w-2xl px-8 reveal-scale">
+    <h2 class="font-playfair italic leading-snug" style="font-size:clamp(28px,4vw,54px)">
+      "A vida é demasiado curta<br>para uma refeição <span class="text-gold">ordinária</span>"
+    </h2>
+    <a href="#reserva"
+      class="inline-block mt-10 font-syne text-[11px] tracking-[4px] uppercase bg-gold text-dark px-10 py-4 hover:bg-gold-light transition-all hover:-translate-y-0.5">
+      Reservar Mesa
+    </a>
+  </div>
+</div>
+
+<!-- ══════════════ BAR & COCKTAILS ══════════════ -->
+<section class="px-16 py-28 bg-dark">
+  <div class="text-center mb-16">
+    <div class="font-syne text-[11px] tracking-[6px] uppercase text-gold mb-4 reveal">Bar & Cocktails</div>
+    <h2 class="font-playfair font-normal reveal" style="font-size:clamp(36px,5vw,64px)">
+      Sabores que <em class="italic text-gold">marcam</em>
+    </h2>
+  </div>
+  <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+    <div class="dish-card reveal-scale" style="transition-delay:.05s">
+      <div class="dish-card-img">
+        <img src="/img/482344974_1256333462871092_1204475383648980227_n.jpg" alt="Cocktail Azzona" loading="lazy">
+      </div>
+      <div class="p-7">
+        <h3 class="font-playfair text-2xl font-normal mb-2">Cocktail Azzona</h3>
+        <p class="text-muted font-light leading-relaxed">Criações exclusivas que celebram sabores tropicais de Moçambique</p>
+        <span class="font-syne text-[10px] tracking-[3px] uppercase text-gold mt-4 inline-block">Cocktails</span>
+      </div>
+    </div>
+    <div class="dish-card reveal-scale" style="transition-delay:.12s">
+      <div class="dish-card-img">
+        <img src="/img/00b60c2b-3c28-41c2-8202-af22d6f4cf57.jfif" alt="Cocktail de Assinatura" loading="lazy">
+      </div>
+      <div class="p-7">
+        <h3 class="font-playfair text-2xl font-normal mb-2">Assinatura da Casa</h3>
+        <p class="text-muted font-light leading-relaxed">Mistura única de ingredientes seleccionados, servida com elegância</p>
+        <span class="font-syne text-[10px] tracking-[3px] uppercase text-gold mt-4 inline-block">Cocktails</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ PARALLAX 2 — Social Fridays ══════════════ -->
+<div class="parallax-banner">
+  <div class="parallax-bg" id="pb2" style="background-image:url('/img/484471297_1258320312672407_7533519604146987578_n.jpg')"></div>
+  <div class="absolute inset-0" style="background:rgba(10,10,10,.6)"></div>
+  <div class="relative z-10 text-center max-w-2xl px-8 reveal-scale">
+    <p class="font-syne text-[11px] tracking-[6px] uppercase text-gold mb-6">Toda Sexta-Feira</p>
+    <h2 class="font-playfair italic leading-snug" style="font-size:clamp(28px,4vw,54px)">
+      Social <span class="text-gold">Fridays</span><br>Música ao vivo &amp; cocktails de assinatura
+    </h2>
+  </div>
+</div>
+
+<!-- ══════════════ VIBES GALLERY — Pessoas ══════════════ -->
+<section id="vibes" class="px-16 py-28" style="background:#111111">
+  <div class="text-center mb-16">
+    <div class="font-syne text-[11px] tracking-[6px] uppercase text-gold mb-4 reveal">Galeria</div>
+    <h2 class="font-playfair font-normal reveal" style="font-size:clamp(36px,5vw,64px)">
+      As Nossas <em class="italic text-gold">Vibes</em>
+    </h2>
+    <p class="text-xl text-muted mt-4 font-light reveal">Momentos que definem a experiência Azzona</p>
+  </div>
+  <div class="gallery-grid">
+    <div class="gallery-item reveal-scale" style="transition-delay:.04s">
+      <img src="/img/vibes/482196354_1255347229636382_3687311378698216210_n.jpg" alt="Vibes Azzona" loading="lazy">
+    </div>
+    <div class="gallery-item reveal-scale" style="transition-delay:.08s">
+      <img src="/img/vibes/469737683_18293253454234146_7261720557772813125_n.jpg" alt="Vibes Azzona" loading="lazy">
+    </div>
+    <div class="gallery-item reveal-scale" style="transition-delay:.12s">
+      <img src="/img/vibes/483097358_1255340166303755_8285685670537361622_n.jpg" alt="Vibes Azzona" loading="lazy">
+    </div>
+    <div class="gallery-item reveal-scale" style="transition-delay:.16s">
+      <img src="/img/vibes/467157596_18290052322234146_6438367006322990335_n.jpg" alt="Vibes Azzona" loading="lazy">
+    </div>
+    <div class="gallery-item reveal-scale" style="transition-delay:.20s">
+      <img src="/img/vibes/467001139_18290052427234146_2692596507482639418_n.jpg" alt="Vibes Azzona" loading="lazy">
+    </div>
+    <div class="gallery-item reveal-scale" style="transition-delay:.24s">
+      <img src="/img/vibes/467032021_18290052550234146_6578581328360495229_n.jpg" alt="Vibes Azzona" loading="lazy">
+    </div>
+    <div class="gallery-item reveal-scale" style="transition-delay:.28s">
+      <img src="/img/vibes/467156789_18290052445234146_2689811263306830889_n.jpg" alt="Vibes Azzona" loading="lazy">
+    </div>
+    <div class="gallery-item reveal-scale" style="transition-delay:.32s">
+      <img src="/img/vibes/487235741_1272101214627650_5561472342872506157_n.jpg" alt="Vibes Azzona" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ DJ SECTION ══════════════ -->
+<section id="djs" class="px-16 py-28 bg-dark overflow-hidden">
+  <div class="text-center mb-16">
+    <div class="font-syne text-[11px] tracking-[6px] uppercase text-gold mb-4 reveal">Noites de Sexta</div>
+    <h2 class="font-playfair font-normal reveal" style="font-size:clamp(36px,5vw,64px)">
+      DJs <em class="italic text-gold">Convidados</em>
+    </h2>
+    <p class="text-xl text-muted mt-4 font-light max-w-md mx-auto reveal">
+      Os melhores selectors de Maputo e além. Cada sexta-feira, uma experiência sonora única.
+    </p>
+  </div>
+
+  <!-- Vinyl + music player -->
+  <div class="flex flex-col md:flex-row items-center justify-center gap-16 py-8">
+    <div class="vinyl-svg flex-shrink-0">
+      <svg viewBox="0 0 200 200" width="180" height="180">
+        <circle cx="100" cy="100" r="98" fill="#111"/>
+        <circle cx="100" cy="100" r="82" fill="none" stroke="#1a1a1a" stroke-width="1"/>
+        <circle cx="100" cy="100" r="70" fill="none" stroke="#1a1a1a" stroke-width="1"/>
+        <circle cx="100" cy="100" r="58" fill="none" stroke="#1a1a1a" stroke-width="1"/>
+        <circle cx="100" cy="100" r="46" fill="none" stroke="#1a1a1a" stroke-width="1"/>
+        <circle cx="100" cy="100" r="34" fill="#1e1e1e"/>
+        <circle cx="100" cy="100" r="22" fill="#C9A96E" opacity="0.15"/>
+        <circle cx="100" cy="100" r="8"  fill="#C9A96E" opacity="0.6"/>
+        <text x="100" y="104" text-anchor="middle" font-size="5" fill="rgba(201,169,110,.5)" font-family="Syne,sans-serif" letter-spacing="2">AZZONA</text>
+      </svg>
+    </div>
+    <div>
+      <div class="font-syne text-[11px] tracking-[6px] uppercase text-gold mb-3">Now Playing</div>
+      <div class="font-playfair font-normal" style="font-size:clamp(24px,3vw,40px)">
+        Azzona House <em class="italic text-gold">Session</em>
+      </div>
+      <div class="font-syne text-xs tracking-[4px] uppercase text-muted mt-3">124 BPM · Elegant House</div>
+      <div class="flex gap-4 mt-7 items-center">
+        <button id="musicToggle" onclick="toggleMusic()"
+          class="bg-gold text-dark px-8 py-3.5 font-syne text-[11px] tracking-[3px] uppercase hover:bg-gold-light transition-all">
+          ▐▐ Pause
+        </button>
+        <div class="flex items-center gap-3">
+          <span class="font-syne text-[10px] tracking-[2px] uppercase text-muted">Vol</span>
+          <input type="range" id="volSlider" min="0" max="1" step="0.01" value="0.35"
+            oninput="setVolume(this.value)" class="w-24 cursor-pointer accent-gold">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ RESERVATION FORM ══════════════ -->
+<section id="reserva" class="px-16 py-28" style="background:#111111">
+  <div class="max-w-2xl mx-auto">
+    <div class="text-center mb-14">
+      <div class="font-syne text-[11px] tracking-[6px] uppercase text-gold mb-4 reveal">Reservas</div>
+      <h2 class="font-playfair font-normal reveal" style="font-size:clamp(36px,5vw,64px)">
+        Reserve a sua <em class="italic text-gold">mesa</em>
+      </h2>
+    </div>
+
+    <form id="reservationForm" class="space-y-5 reveal">
+      <div class="grid md:grid-cols-2 gap-5">
+        <div>
+          <label class="font-syne text-[10px] tracking-[3px] uppercase text-muted block mb-2">Nome *</label>
+          <input name="customer_name" type="text" placeholder="O seu nome" class="field" required>
+        </div>
+        <div>
+          <label class="font-syne text-[10px] tracking-[3px] uppercase text-muted block mb-2">Telefone *</label>
+          <input name="customer_phone" type="tel" placeholder="+258 84 000 0000" class="field" required>
+        </div>
+      </div>
+      <div>
+        <label class="font-syne text-[10px] tracking-[3px] uppercase text-muted block mb-2">E-mail *</label>
+        <input name="customer_email" type="email" placeholder="email@exemplo.com" class="field" required>
+      </div>
+      <div class="grid md:grid-cols-3 gap-5">
+        <div>
+          <label class="font-syne text-[10px] tracking-[3px] uppercase text-muted block mb-2">Data *</label>
+          <input name="date" type="date" class="field" required>
+        </div>
+        <div>
+          <label class="font-syne text-[10px] tracking-[3px] uppercase text-muted block mb-2">Hora *</label>
+          <input name="time" type="time" class="field" required>
+        </div>
+        <div>
+          <label class="font-syne text-[10px] tracking-[3px] uppercase text-muted block mb-2">Pessoas *</label>
+          <input name="guests" type="number" min="1" max="20" placeholder="2" class="field" required>
+        </div>
+      </div>
+      <div>
+        <label class="font-syne text-[10px] tracking-[3px] uppercase text-muted block mb-2">Observações</label>
+        <textarea name="notes" rows="3" placeholder="Alergias, ocasiões especiais, pedidos…" class="field resize-none"></textarea>
+      </div>
+
+      <!-- Error messages -->
+      <div id="formErrors" class="hidden space-y-1"></div>
+
+      <button type="submit" id="submitBtn"
+        class="w-full bg-gold text-dark font-syne text-[11px] tracking-[4px] uppercase py-4 hover:bg-gold-light transition-all hover:-translate-y-0.5 flex items-center justify-center gap-3">
+        <span id="submitText">Confirmar Reserva</span>
+        <svg id="submitSpinner" class="hidden w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.4" stroke-dashoffset="10"/>
+        </svg>
+      </button>
+    </form>
+
+    <!-- Success state -->
+    <div id="formSuccess" class="hidden text-center py-12">
+      <div class="font-syne text-[11px] tracking-[6px] uppercase text-gold mb-4">Reserva Recebida</div>
+      <h3 class="font-playfair text-3xl font-normal mb-4">Obrigado! Entraremos em contacto.</h3>
+      <p class="text-muted font-light">Confirmaremos a sua reserva em breve via telefone ou e-mail.</p>
+      <button onclick="resetForm()"
+        class="mt-8 font-syne text-[11px] tracking-[3px] uppercase text-gold border border-gold px-8 py-3 hover:bg-gold hover:text-dark transition-all">
+        Nova Reserva
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ CONTACT / HOURS ══════════════ -->
+<section id="contact" class="grid md:grid-cols-2 gap-20 px-16 py-28 bg-dark">
+  <div class="reveal-left">
+    <div class="font-syne text-[11px] tracking-[6px] uppercase text-gold mb-4">Horário</div>
+    <h2 class="font-playfair font-normal leading-tight mb-10" style="font-size:clamp(36px,5vw,64px)">
+      Quando nos <em class="italic text-gold">visitar</em>
+    </h2>
+    <ul class="space-y-4 text-xl text-muted font-light" style="line-height:2.2">
+      <li><strong class="text-cream font-normal">Segunda — Quinta</strong>&ensp;10:00 – 23:00</li>
+      <li><strong class="text-cream font-normal">Sexta — Sábado</strong>&ensp;07:30 – 23:00+</li>
+      <li><strong class="text-cream font-normal">Domingo</strong>&ensp;07:30 – 22:00</li>
+    </ul>
+  </div>
+  <div class="reveal-right">
+    <div class="font-syne text-[11px] tracking-[6px] uppercase text-gold mb-4">Contacto</div>
+    <h2 class="font-playfair font-normal leading-tight mb-10" style="font-size:clamp(36px,5vw,64px)">
+      Fale <em class="italic text-gold">connosco</em>
+    </h2>
+    <div class="space-y-3 mb-8">
+      <a href="tel:+258852633403" class="block text-gold text-xl hover:text-gold-light transition-colors font-light">+258 85 263 3403</a>
+      <a href="tel:+258852216334" class="block text-gold text-xl hover:text-gold-light transition-colors font-light">+258 85 221 63 34</a>
+      <a href="https://instagram.com/azzona.mz" target="_blank" class="block text-gold text-xl hover:text-gold-light transition-colors font-light">@azzona.mz</a>
+    </div>
+    <p class="text-muted text-lg font-light leading-relaxed">
+      Rua Mateus Sansão Muthemba,<br>
+      Polana Cimento A, Maputo<br>
+      <span class="font-syne text-[13px] tracking-[2px] uppercase text-gold mt-2 inline-block">Moçambique</span>
+    </p>
+    <a href="tel:+258852633403"
+      class="inline-block mt-8 bg-gold text-dark font-syne text-[11px] tracking-[4px] uppercase px-10 py-4 hover:bg-gold-light transition-all hover:-translate-y-0.5">
+      Ligar Agora
+    </a>
+  </div>
+</section>
+
+<!-- ══════════════ FOOTER ══════════════ -->
+<footer class="px-16 py-12 flex flex-col md:flex-row justify-between items-center gap-6 border-t border-gold/15">
+  <div class="font-syne text-xl font-bold tracking-[6px] text-gold">AZZONA</div>
+  <div class="font-syne text-xs tracking-[2px] text-muted">© 2026 Azzona · Maputo · All rights reserved</div>
+  <div class="flex gap-8">
+    <a href="https://instagram.com/azzona.mz" target="_blank"
+      class="font-syne text-[11px] tracking-[3px] uppercase text-muted hover:text-gold transition-colors">Instagram</a>
+    <a href="https://facebook.com/AzzonaBreakfood" target="_blank"
+      class="font-syne text-[11px] tracking-[3px] uppercase text-muted hover:text-gold transition-colors">Facebook</a>
+  </div>
+</footer>
+
+<!-- ══════════════ SCRIPTS ══════════════ -->
+<script src="/js/music.js"></script>
+<script src="/js/animations.js"></script>
+<script src="/js/menu.js"></script>
+<script src="/js/reservation.js"></script>
+
+</body>
+</html>
