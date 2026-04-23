@@ -4,6 +4,8 @@ const helmet = require('helmet');
 const cors = require('cors');
 const path = require('path');
 
+const db = require('./db');
+const migrate = require('./db/migrate');
 const dishesRouter = require('./routes/dishes');
 const reservationsRouter = require('./routes/reservations');
 const adminRouter = require('./routes/admin');
@@ -30,9 +32,17 @@ app.use('/api/dishes', dishesRouter);
 app.use('/api/reservations', reservationsRouter);
 
 // Public events (DJ da Semana)
-app.get('/api/events/active', (req, res) => {
-  const { events } = require('./routes/admin');
-  res.json(events.filter(e => e.is_active).sort((a, b) => a.date.localeCompare(b.date)));
+app.get('/api/events/active', async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      `SELECT *, date::text AS date, created_at::text AS created_at
+       FROM events WHERE is_active = true ORDER BY date ASC`
+    );
+    res.json(rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Erro interno.' });
+  }
 });
 
 // Admin API
@@ -54,11 +64,17 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ error: err.message || 'Internal Server Error' });
 });
 
-// Só faz listen quando executado directamente (não em testes)
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`🍽  Azzona server → http://localhost:${PORT}`);
-  });
+  migrate()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`Azzona server → http://localhost:${PORT}`);
+      });
+    })
+    .catch(err => {
+      console.error('Migration failed:', err);
+      process.exit(1);
+    });
 }
 
 module.exports = app;

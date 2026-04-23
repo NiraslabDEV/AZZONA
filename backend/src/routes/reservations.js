@@ -1,7 +1,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { v4: uuidv4 } = require('uuid');
-const { reservations, settings } = require('../data/store');
+const db = require('../db');
 const { notifyOwner } = require('../services/email');
 const router = express.Router();
 
@@ -9,6 +9,12 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   message: { error: 'Demasiados pedidos. Tente novamente em 15 minutos.' },
+});
+
+const lookupLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { error: 'Demasiados pedidos.' },
 });
 
 function validateReservation(body) {
@@ -25,72 +31,81 @@ function validateReservation(body) {
   return errors;
 }
 
-// GET /api/reservations/booking-status (public)
-router.get('/booking-status', (req, res) => {
-  res.json({
-    booking_closed: settings.booking_closed,
-    absence_message: settings.absence_message,
-    spotify_embed_url: settings.spotify_embed_url,
-  });
+// GET /api/reservations/booking-status
+router.get('/booking-status', async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      "SELECT key, value FROM settings WHERE key IN ('booking_closed','absence_message','spotify_embed_url')"
+    );
+    const s = {};
+    rows.forEach(r => { s[r.key] = r.key === 'booking_closed' ? r.value === 'true' : r.value; });
+    res.json({
+      booking_closed:   s.booking_closed   ?? false,
+      absence_message:  s.absence_message  ?? '',
+      spotify_embed_url: s.spotify_embed_url ?? '',
+    });
+  } catch (e) {
+    res.status(500).json({ error: 'Erro interno.' });
+  }
 });
 
-// GET /api/reservations/lookup?phone= — CRM público, retorna dados mínimos
-const lookupLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 10,
-  message: { error: 'Demasiados pedidos.' },
-});
-
-router.get('/lookup', lookupLimiter, (req, res) => {
+// GET /api/reservations/lookup?phone=
+router.get('/lookup', lookupLimiter, async (req, res) => {
   const { phone } = req.query;
   if (!phone || phone.replace(/\D/g, '').length < 9) return res.json(null);
   const normalized = phone.replace(/\D/g, '');
-  const matches = reservations
-    .filter(r => r.customer_phone.replace(/\D/g, '').includes(normalized))
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
-  if (!matches.length) return res.json(null);
-  const last = matches[0];
-  res.json({
-    name: last.customer_name,
-    last_visit: last.date,
-    visits: matches.length,
-  });
+  try {
+    const { rows } = await db.query(
+      `SELECT customer_name, date::text AS date,
+              (SELECT COUNT(*) FROM reservations r2
+               WHERE regexp_replace(r2.customer_phone,'[^0-9]','','g') LIKE $1) AS visits
+       FROM reservations
+       WHERE regexp_replace(customer_phone,'[^0-9]','','g') LIKE $1
+       ORDER BY date DESC LIMIT 1`,
+      [`%${normalized}%`]
+    );
+    if (!rows.length) return res.json(null);
+    res.json({ name: rows[0].customer_name, last_visit: rows[0].date, visits: parseInt(rows[0].visits) });
+  } catch (e) {
+    res.json(null);
+  }
 });
 
-router.post('/', limiter, (req, res) => {
-  if (settings.booking_closed) {
+// POST /api/reservations
+router.post('/', limiter, async (req, res) => {
+  // Check if booking is closed
+  const { rows: cfg } = await db.query("SELECT value FROM settings WHERE key='booking_closed'");
+  if (cfg[0]?.value === 'true') {
+    const { rows: msg } = await db.query("SELECT value FROM settings WHERE key='absence_message'");
     return res.status(409).json({
       error: 'Reservas fechadas.',
-      message: settings.absence_message || 'Não estamos a aceitar reservas de momento.',
+      message: msg[0]?.value || 'Não estamos a aceitar reservas de momento.',
     });
   }
 
   const errors = validateReservation(req.body);
   if (errors.length) return res.status(400).json({ errors });
 
-  const reservation = {
-    id: uuidv4(),
-    customer_name: req.body.customer_name.trim(),
-    customer_email: req.body.customer_email.trim().toLowerCase(),
-    customer_phone: req.body.customer_phone.trim(),
-    date: req.body.date,
-    time: req.body.time,
-    guests: parseInt(req.body.guests, 10),
-    notes: req.body.notes?.trim() || '',
-    status: 'pending',
-    created_at: new Date().toISOString(),
-  };
+  const id = uuidv4();
+  const { customer_name, customer_email, customer_phone, date, time, guests, notes } = req.body;
 
-  reservations.push(reservation);
-  console.log('Nova reserva:', reservation.customer_name, reservation.date, reservation.time);
+  try {
+    const { rows } = await db.query(
+      `INSERT INTO reservations (id, customer_name, customer_email, customer_phone, date, "time", guests, notes, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'pending') RETURNING *`,
+      [id, customer_name.trim(), customer_email.trim().toLowerCase(), customer_phone.trim(),
+       date, time, parseInt(guests, 10), notes?.trim() || '']
+    );
+    const reservation = { ...rows[0], date: rows[0].date.toISOString?.().split('T')[0] ?? rows[0].date };
 
-  // Notificar dono (fire-and-forget — não bloqueia a resposta)
-  notifyOwner(reservation).catch(err => console.error('Email erro (owner):', err.message));
+    console.log('Nova reserva:', reservation.customer_name, reservation.date, reservation.time);
+    notifyOwner(reservation).catch(err => console.error('Email erro (owner):', err.message));
 
-  res.status(201).json({
-    message: 'Reserva recebida! Entraremos em contacto para confirmar.',
-    id: reservation.id,
-  });
+    res.status(201).json({ message: 'Reserva recebida! Entraremos em contacto para confirmar.', id });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Erro ao guardar reserva.' });
+  }
 });
 
 module.exports = router;

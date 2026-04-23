@@ -1,18 +1,28 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
-const { dishes } = require('../data/store');
+const db = require('../db');
 const router = express.Router();
 
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
 
-
-router.get('/', limiter, (req, res) => {
+router.get('/', limiter, async (req, res) => {
   const { category } = req.query;
-  let result = dishes.filter(d => d.available);
-  if (category && category !== 'all') {
-    result = result.filter(d => d.category === category);
+  try {
+    const params = [];
+    let where = 'WHERE available = true';
+    if (category && category !== 'all') {
+      params.push(category);
+      where += ` AND category = $${params.length}`;
+    }
+    const { rows } = await db.query(
+      `SELECT * FROM dishes ${where} ORDER BY category, name`,
+      params
+    );
+    res.json(rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Erro interno.' });
   }
-  res.json(result);
 });
 
 module.exports = router;

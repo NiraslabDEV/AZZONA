@@ -41,6 +41,7 @@ jobs:
           NODE_ENV: test
           JWT_SECRET: test_secret_for_ci_only
           PORT: 3001
+          DATABASE_URL: postgresql://azzona:test_password@localhost:5432/azzona_test
 
       - name: Deploy to Railway
         if: success()

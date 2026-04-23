@@ -99,7 +99,7 @@ describe('Admin Settings', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({ value: true });
     expect(res.status).toBe(200);
-    expect(res.body.value).toBe(true);
+    expect(res.body.value).toBe('true');
 
     // Reset
     await request(app)
