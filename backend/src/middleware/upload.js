@@ -21,6 +21,9 @@ const _multer = multer({
 
 const UPLOADS_DIR = path.join(__dirname, '../../uploads');
 
+// Garantir que a pasta existe (Railway não persiste o filesystem entre deploys)
+fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
 // Middleware: multer upload + magic bytes validation + save to disk
 function uploadImage(fieldName) {
   return [
