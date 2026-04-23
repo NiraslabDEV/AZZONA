@@ -138,22 +138,77 @@ nav.scrolled { -webkit-backdrop-filter:blur(20px); }
 </div>
 
 <!-- ══════════════ NAV ══════════════ -->
-<nav id="nav" class="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-12 py-6 transition-all duration-500"
+<nav id="nav" class="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 md:px-12 py-4 md:py-6 transition-all duration-500"
   style="background:linear-gradient(to bottom,rgba(10,10,10,.9),transparent)">
-  <div class="font-syne text-2xl font-bold tracking-[8px] text-gold uppercase">Azzona</div>
+  <div class="font-syne text-xl md:text-2xl font-bold tracking-[6px] md:tracking-[8px] text-gold uppercase">Azzona</div>
+
+  <!-- Desktop links -->
   <ul class="hidden md:flex gap-9 list-none">
-    <li><a href="#about"  class="font-syne text-xs tracking-[3px] uppercase text-cream hover:text-gold transition-colors relative group">O Espaço<span class="absolute -bottom-1 left-0 w-0 h-px bg-gold transition-all duration-300 group-hover:w-full"></span></a></li>
-    <li><a href="#menu"   class="font-syne text-xs tracking-[3px] uppercase text-cream hover:text-gold transition-colors relative group">Menu<span class="absolute -bottom-1 left-0 w-0 h-px bg-gold transition-all duration-300 group-hover:w-full"></span></a></li>
-    <li><a href="#vibes"  class="font-syne text-xs tracking-[3px] uppercase text-cream hover:text-gold transition-colors relative group">Vibes<span class="absolute -bottom-1 left-0 w-0 h-px bg-gold transition-all duration-300 group-hover:w-full"></span></a></li>
+    <li><a href="#about"   class="font-syne text-xs tracking-[3px] uppercase text-cream hover:text-gold transition-colors relative group">O Espaço<span class="absolute -bottom-1 left-0 w-0 h-px bg-gold transition-all duration-300 group-hover:w-full"></span></a></li>
+    <li><a href="#menu"    class="font-syne text-xs tracking-[3px] uppercase text-cream hover:text-gold transition-colors relative group">Menu<span class="absolute -bottom-1 left-0 w-0 h-px bg-gold transition-all duration-300 group-hover:w-full"></span></a></li>
+    <li><a href="#vibes"   class="font-syne text-xs tracking-[3px] uppercase text-cream hover:text-gold transition-colors relative group">Vibes<span class="absolute -bottom-1 left-0 w-0 h-px bg-gold transition-all duration-300 group-hover:w-full"></span></a></li>
     <li><a href="#reserva" class="font-syne text-xs tracking-[3px] uppercase text-cream hover:text-gold transition-colors relative group">Reservas<span class="absolute -bottom-1 left-0 w-0 h-px bg-gold transition-all duration-300 group-hover:w-full"></span></a></li>
     <li><a href="#contact" class="font-syne text-xs tracking-[3px] uppercase text-cream hover:text-gold transition-colors relative group">Contacto<span class="absolute -bottom-1 left-0 w-0 h-px bg-gold transition-all duration-300 group-hover:w-full"></span></a></li>
     <li><a href="/delivery.html" class="font-syne text-xs tracking-[3px] uppercase text-gold hover:text-gold-light transition-colors relative group">🛵 Delivery<span class="absolute -bottom-1 left-0 w-0 h-px bg-gold transition-all duration-300 group-hover:w-full"></span></a></li>
   </ul>
+
+  <!-- Desktop CTA -->
   <button onclick="document.getElementById('reserva').scrollIntoView({behavior:'smooth'})"
-    class="font-syne text-[11px] tracking-[3px] uppercase bg-gold text-dark px-7 py-3 hover:bg-gold-light transition-all hover:-translate-y-0.5">
+    class="hidden md:block font-syne text-[11px] tracking-[3px] uppercase bg-gold text-dark px-7 py-3 hover:bg-gold-light transition-all hover:-translate-y-0.5">
     Reservar
   </button>
+
+  <!-- Mobile hamburger -->
+  <button id="hamburgerBtn" onclick="toggleMobileMenu()" aria-label="Menu"
+    class="md:hidden flex flex-col justify-center gap-[5px] w-10 h-10 p-2">
+    <span id="hb1" class="block w-full h-px bg-gold transition-all duration-300"></span>
+    <span id="hb2" class="block w-full h-px bg-gold transition-all duration-300"></span>
+    <span id="hb3" class="block w-5 h-px bg-gold transition-all duration-300 ml-auto"></span>
+  </button>
 </nav>
+
+<!-- ══════════════ MOBILE MENU ══════════════ -->
+<div id="mobileMenu"
+  class="fixed inset-0 z-40 bg-dark flex-col items-center justify-center gap-8 hidden"
+  style="padding-top:80px">
+  <div class="flex flex-col items-center gap-7 w-full px-8">
+    <a href="#about"   onclick="closeMobileMenu()" class="font-syne text-sm tracking-[4px] uppercase text-cream hover:text-gold transition-colors">O Espaço</a>
+    <a href="#menu"    onclick="closeMobileMenu()" class="font-syne text-sm tracking-[4px] uppercase text-cream hover:text-gold transition-colors">Menu</a>
+    <a href="#vibes"   onclick="closeMobileMenu()" class="font-syne text-sm tracking-[4px] uppercase text-cream hover:text-gold transition-colors">Vibes</a>
+    <a href="#reserva" onclick="closeMobileMenu()" class="font-syne text-sm tracking-[4px] uppercase text-cream hover:text-gold transition-colors">Reservas</a>
+    <a href="#contact" onclick="closeMobileMenu()" class="font-syne text-sm tracking-[4px] uppercase text-cream hover:text-gold transition-colors">Contacto</a>
+    <div class="w-12 h-px bg-gold/20 my-1"></div>
+    <a href="/delivery.html"
+      class="font-syne text-sm tracking-[4px] uppercase text-gold hover:text-gold-light transition-colors flex items-center gap-2">
+      🛵 Delivery
+    </a>
+    <button onclick="closeMobileMenu();document.getElementById('reserva').scrollIntoView({behavior:'smooth'})"
+      class="mt-2 w-full font-syne text-[11px] tracking-[3px] uppercase bg-gold text-dark py-4 hover:bg-gold-light transition-colors">
+      Fazer Reserva
+    </button>
+  </div>
+</div>
+<script>
+function toggleMobileMenu() {
+  const menu = document.getElementById('mobileMenu');
+  const isOpen = menu.style.display === 'flex';
+  menu.style.display = isOpen ? 'none' : 'flex';
+  document.body.style.overflow = isOpen ? '' : 'hidden';
+  // Animate hamburger → X
+  document.getElementById('hb1').style.transform = isOpen ? '' : 'translateY(6px) rotate(45deg)';
+  document.getElementById('hb2').style.opacity  = isOpen ? '1' : '0';
+  document.getElementById('hb3').style.transform = isOpen ? '' : 'translateY(-6px) rotate(-45deg) scaleX(1.6) translateX(-2px)';
+  document.getElementById('hb3').style.marginLeft = isOpen ? 'auto' : '0';
+}
+function closeMobileMenu() {
+  document.getElementById('mobileMenu').style.display = 'none';
+  document.body.style.overflow = '';
+  document.getElementById('hb1').style.transform = '';
+  document.getElementById('hb2').style.opacity  = '1';
+  document.getElementById('hb3').style.transform = '';
+  document.getElementById('hb3').style.marginLeft = 'auto';
+}
+</script>
 
 <!-- ══════════════ HERO ══════════════ -->
 <section id="hero" class="hero h-screen relative flex items-end overflow-hidden">
@@ -171,6 +226,16 @@ nav.scrolled { -webkit-backdrop-filter:blur(20px); }
     <p class="hero-sub text-xl text-muted mt-6 leading-relaxed font-light">
       No coração da Polana, onde a gastronomia internacional encontra a alma de Moçambique.
     </p>
+    <div class="hero-sub flex flex-wrap gap-4 mt-8" style="animation-delay:1.2s">
+      <button onclick="document.getElementById('reserva').scrollIntoView({behavior:'smooth'})"
+        class="font-syne text-[11px] tracking-[3px] uppercase bg-gold text-dark px-8 py-4 hover:bg-gold-light transition-all hover:-translate-y-0.5">
+        Fazer Reserva
+      </button>
+      <a href="/delivery.html"
+        class="font-syne text-[11px] tracking-[3px] uppercase border border-gold/50 text-gold px-8 py-4 hover:bg-gold hover:text-dark transition-all hover:-translate-y-0.5 flex items-center gap-2">
+        🛵 Pedir Delivery
+      </a>
+    </div>
   </div>
   <div class="hero-scroll absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2">
     <span class="font-syne text-[10px] tracking-[4px] uppercase text-gold">Scroll</span>
@@ -493,6 +558,40 @@ nav.scrolled { -webkit-backdrop-filter:blur(20px); }
       class="inline-block mt-8 bg-gold text-dark font-syne text-[11px] tracking-[4px] uppercase px-10 py-4 hover:bg-gold-light transition-all hover:-translate-y-0.5">
       Ligar Agora
     </a>
+  </div>
+</section>
+
+<!-- ══════════════ DELIVERY CTA ══════════════ -->
+<section id="delivery" class="relative px-6 md:px-16 py-24 md:py-36 overflow-hidden" style="background:#111111">
+  <div class="absolute inset-0 pointer-events-none" style="background:radial-gradient(ellipse 70% 60% at 50% 50%,rgba(201,169,110,0.06),transparent)"></div>
+  <div class="relative max-w-4xl mx-auto text-center reveal">
+    <p class="font-syne text-[11px] tracking-[5px] uppercase text-gold mb-5">Azzona em Casa</p>
+    <h2 class="font-playfair text-4xl md:text-6xl text-cream mb-6 leading-tight">
+      Prefere receber<br><em class="italic text-gold">em casa?</em>
+    </h2>
+    <p class="text-muted text-xl font-cormorant mb-10 max-w-xl mx-auto leading-relaxed">
+      O menu completo do Azzona agora chega até si. Escolha os seus pratos, monte o pedido e envie directamente pelo WhatsApp.
+    </p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+      <a href="/delivery.html"
+        class="font-syne text-[11px] tracking-[4px] uppercase bg-gold text-dark px-10 py-4 hover:bg-gold-light transition-all hover:-translate-y-0.5 flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        Ver Menu de Delivery
+      </a>
+      <span class="font-syne text-[10px] tracking-[2px] text-muted uppercase">Confirmação via WhatsApp · Rápido e fácil</span>
+    </div>
+  </div>
+
+  <!-- Decorative diamonds -->
+  <div class="absolute left-8 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-4 opacity-20">
+    <div class="w-2 h-2 bg-gold rotate-45"></div>
+    <div class="w-1 h-1 bg-gold rotate-45"></div>
+    <div class="w-2 h-2 bg-gold rotate-45"></div>
+  </div>
+  <div class="absolute right-8 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-4 opacity-20">
+    <div class="w-2 h-2 bg-gold rotate-45"></div>
+    <div class="w-1 h-1 bg-gold rotate-45"></div>
+    <div class="w-2 h-2 bg-gold rotate-45"></div>
   </div>
 </section>
 
