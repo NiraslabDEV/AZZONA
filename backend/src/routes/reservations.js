@@ -24,11 +24,34 @@ function validateReservation(body) {
   return errors;
 }
 
-// GET /api/settings/booking-status (public)
+// GET /api/reservations/booking-status (public)
 router.get('/booking-status', (req, res) => {
   res.json({
     booking_closed: settings.booking_closed,
     absence_message: settings.absence_message,
+  });
+});
+
+// GET /api/reservations/lookup?phone= — CRM público, retorna dados mínimos
+const lookupLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  message: { error: 'Demasiados pedidos.' },
+});
+
+router.get('/lookup', lookupLimiter, (req, res) => {
+  const { phone } = req.query;
+  if (!phone || phone.replace(/\D/g, '').length < 9) return res.json(null);
+  const normalized = phone.replace(/\D/g, '');
+  const matches = reservations
+    .filter(r => r.customer_phone.replace(/\D/g, '').includes(normalized))
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+  if (!matches.length) return res.json(null);
+  const last = matches[0];
+  res.json({
+    name: last.customer_name,
+    last_visit: last.date,
+    visits: matches.length,
   });
 });
 

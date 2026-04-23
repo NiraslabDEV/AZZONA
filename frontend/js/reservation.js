@@ -9,8 +9,7 @@ const spinner   = document.getElementById('submitSpinner');
 // Set minimum date to today
 const dateInput = form.querySelector('[name="date"]');
 if (dateInput) {
-  const today = new Date().toISOString().split('T')[0];
-  dateInput.min = today;
+  dateInput.min = new Date().toISOString().split('T')[0];
 }
 
 function showErrors(msgs) {
@@ -32,7 +31,49 @@ function setLoading(loading) {
   submitBtn.classList.toggle('opacity-70', loading);
 }
 
-// Check if bookings are closed and show a notice
+// ── CRM: debounce no campo telefone ───────────────────────────
+const phoneInput = form.querySelector('[name="customer_phone"]');
+let crmHint = null;
+let crmTimer = null;
+
+if (phoneInput) {
+  // Criar elemento de hint
+  crmHint = document.createElement('div');
+  crmHint.className = 'font-syne text-[11px] tracking-[1px] mt-1 hidden';
+  phoneInput.parentNode.appendChild(crmHint);
+
+  phoneInput.addEventListener('input', () => {
+    clearTimeout(crmTimer);
+    const digits = phoneInput.value.replace(/\D/g, '');
+    if (digits.length < 9) {
+      hideCrmHint();
+      return;
+    }
+    crmTimer = setTimeout(() => lookupCustomer(phoneInput.value), 500);
+  });
+}
+
+function hideCrmHint() {
+  if (crmHint) crmHint.classList.add('hidden');
+}
+
+async function lookupCustomer(phone) {
+  try {
+    const res = await fetch(`/api/reservations/lookup?phone=${encodeURIComponent(phone)}`);
+    const data = await res.json();
+    if (!data) { hideCrmHint(); return; }
+
+    const lastDate = new Date(data.last_visit + 'T12:00:00').toLocaleDateString('pt-PT', { day:'numeric', month:'short' });
+    const visits = data.visits;
+    crmHint.innerHTML = `★ <span style="color:#C9A96E">${data.name}</span> — ${visits} visita${visits > 1 ? 's' : ''}, última em ${lastDate}`;
+    crmHint.className = 'font-syne text-[11px] tracking-[1px] mt-1';
+    crmHint.style.color = '#8A8276';
+  } catch (_) {
+    hideCrmHint();
+  }
+}
+
+// ── Verificar se reservas estão fechadas ──────────────────────
 async function checkBookingStatus() {
   try {
     const res = await fetch('/api/reservations/booking-status');
@@ -44,12 +85,13 @@ async function checkBookingStatus() {
       showErrors([`🔒 ${msg}`]);
     }
   } catch (_) {
-    // Silent — don't block form if check fails
+    // Silent — não bloquear form se check falhar
   }
 }
 
 checkBookingStatus();
 
+// ── Submit ────────────────────────────────────────────────────
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   clearErrors();
@@ -86,5 +128,6 @@ window.resetForm = function () {
   form.classList.remove('hidden');
   success.classList.add('hidden');
   clearErrors();
+  hideCrmHint();
   checkBookingStatus();
 };

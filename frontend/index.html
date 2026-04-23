@@ -98,20 +98,10 @@ nav.scrolled { -webkit-backdrop-filter:blur(20px); }
 .parallax-banner { height:70vh; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
 .parallax-bg { position:absolute; inset:-20%; background-size:cover; background-position:center; will-change:transform; }
 
-/* ── Music Bar ── */
-#musicBar { position:fixed; bottom:0; left:0; right:0; z-index:200; background:rgba(10,10,10,.96); border-top:1px solid rgba(201,169,110,.15); display:flex; align-items:center; gap:20px; padding:12px 32px; transform:translateY(100%); transition:transform .6s cubic-bezier(.16,1,.3,1); }
-#musicBar.visible { transform:translateY(0); }
-.bar-eq { display:flex; gap:3px; align-items:flex-end; height:20px; }
-.bar-eq span { width:3px; background:#C9A96E; border-radius:2px; animation:eqBounce .6s ease infinite alternate; }
-.bar-eq span:nth-child(1){height:8px;animation-delay:0s}
-.bar-eq span:nth-child(2){height:16px;animation-delay:.1s}
-.bar-eq span:nth-child(3){height:12px;animation-delay:.2s}
-.bar-eq span:nth-child(4){height:20px;animation-delay:.15s}
-.bar-eq span:nth-child(5){height:10px;animation-delay:.05s}
-.bar-eq.paused span { animation-play-state:paused; opacity:.3; }
-
-/* ── Vinyl ── */
-.vinyl-svg { animation:vinylRotate 3s linear infinite; filter:drop-shadow(0 0 24px rgba(201,169,110,.15)); }
+/* ── Spotify Bar ── */
+#spotifyBar { position:fixed; bottom:0; left:0; right:0; z-index:200; background:rgba(10,10,10,.97); border-top:1px solid rgba(201,169,110,.15); display:flex; align-items:center; gap:20px; padding:10px 32px 10px 24px; transform:translateY(100%); transition:transform .6s cubic-bezier(.16,1,.3,1); }
+#spotifyBar.visible { transform:translateY(0); }
+#spotifyBar iframe { border-radius:8px; flex-shrink:0; }
 
 /* ── Form fields ── */
 .field { width:100%; background:#111; border:1px solid rgba(201,169,110,.2); color:#F5F0E8; padding:14px 18px; font-family:'Cormorant Garamond',serif; font-size:18px; outline:none; transition:border-color .3s; }
@@ -135,21 +125,16 @@ nav.scrolled { -webkit-backdrop-filter:blur(20px); }
 </head>
 <body class="bg-dark text-cream font-cormorant overflow-x-hidden">
 
-<!-- ══════════════ MUSIC BAR ══════════════ -->
-<div id="musicBar">
-  <div class="bar-eq" id="barEq">
-    <span></span><span></span><span></span><span></span><span></span>
-  </div>
-  <span class="font-syne text-[10px] tracking-[3px] uppercase text-gold">Azzona House Session</span>
-  <span class="font-syne text-[10px] tracking-[2px] text-muted">· 124 BPM</span>
-  <div class="flex-1"></div>
-  <input type="range" id="volSliderBar" min="0" max="1" step="0.01" value="0.35"
-    oninput="setVolume(this.value)"
-    class="w-20 cursor-pointer accent-gold">
-  <button onclick="toggleMusic()" id="barToggleBtn"
-    class="border border-gold/30 text-gold px-4 py-1.5 font-syne text-[10px] tracking-[2px] uppercase hover:bg-gold hover:text-dark transition-all">
-    ▐▐ Pause
-  </button>
+<!-- ══════════════ SPOTIFY BAR ══════════════ -->
+<div id="spotifyBar">
+  <iframe id="spotifyEmbed"
+    style="border-radius:8px"
+    src="https://open.spotify.com/embed/playlist/37i9dQZF1DX2RxBh64BHjQ?utm_source=generator&theme=0"
+    width="100%" height="80" frameBorder="0"
+    allowfullscreen=""
+    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+    loading="lazy">
+  </iframe>
 </div>
 
 <!-- ══════════════ NAV ══════════════ -->
@@ -387,38 +372,18 @@ nav.scrolled { -webkit-backdrop-filter:blur(20px); }
     </p>
   </div>
 
-  <!-- Vinyl + music player -->
-  <div class="flex flex-col md:flex-row items-center justify-center gap-16 py-8">
-    <div class="vinyl-svg flex-shrink-0">
-      <svg viewBox="0 0 200 200" width="180" height="180">
-        <circle cx="100" cy="100" r="98" fill="#111"/>
-        <circle cx="100" cy="100" r="82" fill="none" stroke="#1a1a1a" stroke-width="1"/>
-        <circle cx="100" cy="100" r="70" fill="none" stroke="#1a1a1a" stroke-width="1"/>
-        <circle cx="100" cy="100" r="58" fill="none" stroke="#1a1a1a" stroke-width="1"/>
-        <circle cx="100" cy="100" r="46" fill="none" stroke="#1a1a1a" stroke-width="1"/>
-        <circle cx="100" cy="100" r="34" fill="#1e1e1e"/>
-        <circle cx="100" cy="100" r="22" fill="#C9A96E" opacity="0.15"/>
-        <circle cx="100" cy="100" r="8"  fill="#C9A96E" opacity="0.6"/>
-        <text x="100" y="104" text-anchor="middle" font-size="5" fill="rgba(201,169,110,.5)" font-family="Syne,sans-serif" letter-spacing="2">AZZONA</text>
-      </svg>
-    </div>
-    <div>
-      <div class="font-syne text-[11px] tracking-[6px] uppercase text-gold mb-3">Now Playing</div>
-      <div class="font-playfair font-normal" style="font-size:clamp(24px,3vw,40px)">
-        Azzona House <em class="italic text-gold">Session</em>
-      </div>
-      <div class="font-syne text-xs tracking-[4px] uppercase text-muted mt-3">124 BPM · Elegant House</div>
-      <div class="flex gap-4 mt-7 items-center">
-        <button id="musicToggle" onclick="toggleMusic()"
-          class="bg-gold text-dark px-8 py-3.5 font-syne text-[11px] tracking-[3px] uppercase hover:bg-gold-light transition-all">
-          ▐▐ Pause
-        </button>
-        <div class="flex items-center gap-3">
-          <span class="font-syne text-[10px] tracking-[2px] uppercase text-muted">Vol</span>
-          <input type="range" id="volSlider" min="0" max="1" step="0.01" value="0.35"
-            oninput="setVolume(this.value)" class="w-24 cursor-pointer accent-gold">
-        </div>
-      </div>
+  <!-- Spotify Embed -->
+  <div class="max-w-2xl mx-auto py-8 reveal">
+    <div class="font-syne text-[10px] tracking-[4px] uppercase text-muted mb-4 text-center">Now Streaming</div>
+    <iframe style="border-radius:12px"
+      src="https://open.spotify.com/embed/playlist/37i9dQZF1DX2RxBh64BHjQ?utm_source=generator&theme=0"
+      width="100%" height="152" frameBorder="0"
+      allowfullscreen=""
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      loading="lazy">
+    </iframe>
+    <div class="font-syne text-[10px] tracking-[3px] uppercase text-muted/40 text-center mt-4">
+      Afro House · Deep Grooves · Curated for Azzona
     </div>
   </div>
 </section>
@@ -531,7 +496,6 @@ nav.scrolled { -webkit-backdrop-filter:blur(20px); }
 <footer class="px-16 py-12 flex flex-col md:flex-row justify-between items-center gap-6 border-t border-gold/15">
   <div class="font-syne text-xl font-bold tracking-[6px] text-gold">AZZONA</div>
   <div class="font-syne text-xs tracking-[2px] text-muted">© 2026 Azzona · Maputo · All rights reserved</div>
-  <a href="/admin/dashboard.html" class="font-syne text-[9px] tracking-[3px] uppercase text-muted/40 hover:text-gold/50 transition-colors">Staff Portal</a>
   <div class="flex gap-8">
     <a href="https://instagram.com/azzona.mz" target="_blank"
       class="font-syne text-[11px] tracking-[3px] uppercase text-muted hover:text-gold transition-colors">Instagram</a>
@@ -540,11 +504,32 @@ nav.scrolled { -webkit-backdrop-filter:blur(20px); }
   </div>
 </footer>
 
+<!-- Botão discreto de acesso ao staff — fixo no canto inferior direito -->
+<a href="/admin/dashboard.html" title="Staff" aria-label="Staff Portal"
+  style="position:fixed;bottom:24px;right:24px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;opacity:0.18;transition:opacity 0.4s,transform 0.4s;z-index:50;text-decoration:none;"
+  onmouseenter="this.style.opacity='0.7';this.style.transform='scale(1.1)'"
+  onmouseleave="this.style.opacity='0.18';this.style.transform='scale(1)'">
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3" y="8" width="12" height="9" rx="1" stroke="#C9A96E" stroke-width="1.5"/>
+    <path d="M6 8V5.5a3 3 0 0 1 6 0V8" stroke="#C9A96E" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="9" cy="12.5" r="1.2" fill="#C9A96E"/>
+  </svg>
+</a>
+
 <!-- ══════════════ SCRIPTS ══════════════ -->
-<script src="/js/music.js"></script>
 <script src="/js/animations.js"></script>
 <script src="/js/menu.js"></script>
 <script src="/js/reservation.js"></script>
+<script>
+  // Mostrar Spotify bar após scroll (substitui a music bar anterior)
+  let spotifyShown = false;
+  window.addEventListener('scroll', () => {
+    if (!spotifyShown && window.scrollY > 300) {
+      document.getElementById('spotifyBar').classList.add('visible');
+      spotifyShown = true;
+    }
+  }, { passive: true });
+</script>
 
 </body>
 </html>

@@ -2,8 +2,13 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
+const { v4: uuidv4 } = require('uuid');
 const { reservations, settings } = require('../data/store');
 const auth = require('../middleware/auth');
+const { uploadImage } = require('../middleware/upload');
+
+// In-memory events store (DJ events)
+const events = [];
 
 const router = express.Router();
 
@@ -114,4 +119,59 @@ router.get('/customers/search', auth, (req, res) => {
   res.json(matches);
 });
 
+// ── Events (DJ da Semana) ─────────────────────────────────────
+
+// POST /api/admin/events — cria evento com upload de imagem
+router.post('/events', auth, uploadImage('image'), (req, res) => {
+  const { dj_name, date, description, is_active } = req.body;
+  if (!dj_name || !date) return res.status(400).json({ error: 'dj_name e date são obrigatórios.' });
+
+  const event = {
+    id: uuidv4(),
+    dj_name: dj_name.trim(),
+    date,
+    description: description?.trim() || '',
+    image_url: req.file ? `/uploads/${req.file.filename}` : null,
+    is_active: is_active === 'true' || is_active === true,
+    created_at: new Date().toISOString(),
+  };
+  events.push(event);
+  res.status(201).json(event);
+});
+
+// GET /api/admin/events
+router.get('/events', auth, (req, res) => {
+  res.json([...events].sort((a, b) => a.date.localeCompare(b.date)));
+});
+
+// PUT /api/admin/events/:id
+router.put('/events/:id', auth, uploadImage('image'), (req, res) => {
+  const idx = events.findIndex(e => e.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Evento não encontrado.' });
+  const { dj_name, date, description, is_active } = req.body;
+  events[idx] = {
+    ...events[idx],
+    ...(dj_name && { dj_name: dj_name.trim() }),
+    ...(date && { date }),
+    ...(description !== undefined && { description: description.trim() }),
+    ...(is_active !== undefined && { is_active: is_active === 'true' || is_active === true }),
+    ...(req.file && { image_url: `/uploads/${req.file.filename}` }),
+  };
+  res.json(events[idx]);
+});
+
+// DELETE /api/admin/events/:id
+router.delete('/events/:id', auth, (req, res) => {
+  const idx = events.findIndex(e => e.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Evento não encontrado.' });
+  events.splice(idx, 1);
+  res.status(204).end();
+});
+
+// GET /api/events/active — público, retorna eventos activos para o site
+router.get('/events/active-public', (req, res) => {
+  res.json(events.filter(e => e.is_active).sort((a, b) => a.date.localeCompare(b.date)));
+});
+
 module.exports = router;
+module.exports.events = events;
