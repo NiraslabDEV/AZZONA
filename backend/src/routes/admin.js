@@ -263,6 +263,77 @@ router.delete('/events/:id', auth, async (req, res) => {
   }
 });
 
+// ── Pedidos Delivery ──────────────────────────────────────────
+
+// GET /api/admin/orders
+router.get('/orders', auth, async (req, res) => {
+  const { date, status } = req.query;
+  const conditions = [];
+  const params = [];
+
+  if (date) {
+    params.push(date);
+    conditions.push(`created_at::date = $${params.length}`);
+  }
+  if (status) {
+    params.push(status);
+    conditions.push(`status = $${params.length}`);
+  }
+
+  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  try {
+    const { rows } = await db.query(
+      `SELECT *, created_at::text AS created_at, updated_at::text AS updated_at
+       FROM orders ${where} ORDER BY created_at DESC`,
+      params
+    );
+    res.json(rows);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Erro interno.' });
+  }
+});
+
+// GET /api/admin/orders/today
+router.get('/orders/today', auth, async (req, res) => {
+  const today = new Date().toISOString().split('T')[0];
+  try {
+    const { rows } = await db.query(
+      `SELECT *, created_at::text AS created_at, updated_at::text AS updated_at
+       FROM orders WHERE created_at::date = $1 ORDER BY created_at DESC`,
+      [today]
+    );
+    const totalRevenue = rows.reduce((s, r) => s + Number(r.total), 0);
+    res.json({ orders: rows, total: rows.length, totalRevenue });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Erro interno.' });
+  }
+});
+
+// PUT /api/admin/orders/:id
+router.put('/orders/:id', auth, async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body || {};
+  const allowed = ['pending', 'confirmed', 'preparing', 'delivered', 'cancelled'];
+  if (!allowed.includes(status)) {
+    return res.status(400).json({ error: 'Status inválido.' });
+  }
+  try {
+    const { rows } = await db.query(
+      `UPDATE orders SET status=$1, updated_at=NOW()
+       WHERE id=$2
+       RETURNING *, created_at::text AS created_at, updated_at::text AS updated_at`,
+      [status, id]
+    );
+    if (!rows.length) return res.status(404).json({ error: 'Pedido não encontrado.' });
+    res.json(rows[0]);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Erro interno.' });
+  }
+});
+
 // ── Cardápio (Dishes) ─────────────────────────────────────────
 
 // GET /api/admin/dishes

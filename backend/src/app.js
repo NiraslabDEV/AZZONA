@@ -8,6 +8,7 @@ const db = require('./db');
 const migrate = require('./db/migrate');
 const dishesRouter = require('./routes/dishes');
 const reservationsRouter = require('./routes/reservations');
+const ordersRouter = require('./routes/orders');
 const adminRouter = require('./routes/admin');
 
 const app = express();
@@ -30,6 +31,7 @@ app.use('/uploads', (req, res, next) => {
 // Public API
 app.use('/api/dishes', dishesRouter);
 app.use('/api/reservations', reservationsRouter);
+app.use('/api/orders', ordersRouter);
 
 // Public events (DJ da Semana)
 app.get('/api/events/active', async (req, res) => {

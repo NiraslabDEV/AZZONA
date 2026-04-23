@@ -352,7 +352,7 @@ function updateCart() {
 }
 
 // ── WhatsApp ──────────────────────────────────────────────────────────────────
-function sendWhatsApp() {
+async function sendWhatsApp() {
   const name    = document.getElementById('clientName').value.trim();
   const phone   = document.getElementById('clientPhone').value.trim();
   const address = document.getElementById('clientAddress').value.trim();
@@ -367,10 +367,20 @@ function sendWhatsApp() {
     return;
   }
 
-  const items = Object.values(cart);
-  const total = items.reduce((s, { dish, qty }) => s + Number(dish.price) * qty, 0);
+  const cartItems = Object.values(cart);
+  const total = cartItems.reduce((s, { dish, qty }) => s + Number(dish.price) * qty, 0);
+  const itemsPayload = cartItems.map(({ dish, qty }) => ({
+    id: dish.id, name: dish.name, qty, price: Number(dish.price),
+  }));
 
-  const lines = items.map(({ dish, qty }) =>
+  // Guardar pedido na base de dados (fire-and-forget)
+  fetch('/api/orders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ customer_name: name, customer_phone: phone, customer_address: address, notes, items: itemsPayload, total }),
+  }).catch(() => {});
+
+  const lines = cartItems.map(({ dish, qty }) =>
     `  • ${qty}x ${dish.name} — ${(Number(dish.price) * qty).toLocaleString('pt-MZ')} ${CURRENCY}`
   ).join('\n');
 

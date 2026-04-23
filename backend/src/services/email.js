@@ -166,4 +166,64 @@ async function confirmCustomer(reservation) {
   });
 }
 
-module.exports = { notifyOwner, confirmCustomer };
+// ── Email para o dono quando chega novo pedido de delivery ───
+async function notifyOwnerOrder(order) {
+  if (!process.env.EMAIL_USER || !process.env.OWNER_EMAIL) return;
+  const t = createTransport();
+  const { customer_name, customer_phone, customer_address, notes, items, total, id } = order;
+  const itemLines = (Array.isArray(items) ? items : []).map(i =>
+    `<tr><td style="padding:8px 0;border-bottom:1px solid rgba(201,169,110,0.06);color:#E8E0D0;font-size:14px">${i.qty}× ${i.name}</td><td style="padding:8px 0;border-bottom:1px solid rgba(201,169,110,0.06);color:#C9A96E;font-size:14px;text-align:right">${(i.price * i.qty).toLocaleString('pt-MZ')} MT</td></tr>`
+  ).join('');
+  await t.sendMail({
+    from: `"Azzona Delivery" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+    to: process.env.OWNER_EMAIL,
+    subject: `🛵 Novo pedido delivery — ${customer_name}`,
+    html: `
+<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#0A0A0A;font-family:'Arial',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0A0A0A;padding:40px 20px">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#111111;border:1px solid rgba(201,169,110,0.2);max-width:560px;width:100%">
+        <tr><td style="padding:36px 40px 24px;border-bottom:1px solid rgba(201,169,110,0.1)">
+          <div style="font-size:11px;letter-spacing:5px;color:#C9A96E;text-transform:uppercase;margin-bottom:8px">🛵 Novo Pedido Delivery</div>
+          <div style="font-family:Georgia,serif;font-size:28px;color:#E8E0D0">AZZONA</div>
+        </td></tr>
+        <tr><td style="padding:32px 40px">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr><td style="padding:10px 0;border-bottom:1px solid rgba(201,169,110,0.08)">
+              <div style="font-size:10px;letter-spacing:2px;color:#8A8276;text-transform:uppercase;margin-bottom:4px">Cliente</div>
+              <div style="font-size:16px;color:#E8E0D0;font-family:Georgia,serif">${customer_name}</div>
+            </td></tr>
+            <tr><td style="padding:10px 0;border-bottom:1px solid rgba(201,169,110,0.08)">
+              <div style="font-size:10px;letter-spacing:2px;color:#8A8276;text-transform:uppercase;margin-bottom:4px">Telefone / WhatsApp</div>
+              <div style="font-size:15px;color:#E8E0D0">${customer_phone}</div>
+            </td></tr>
+            <tr><td style="padding:10px 0;border-bottom:1px solid rgba(201,169,110,0.08)">
+              <div style="font-size:10px;letter-spacing:2px;color:#8A8276;text-transform:uppercase;margin-bottom:4px">Morada de Entrega</div>
+              <div style="font-size:15px;color:#E8E0D0">${customer_address}</div>
+            </td></tr>
+            ${notes ? `<tr><td style="padding:10px 0;border-bottom:1px solid rgba(201,169,110,0.08)">
+              <div style="font-size:10px;letter-spacing:2px;color:#8A8276;text-transform:uppercase;margin-bottom:4px">Observações</div>
+              <div style="font-size:13px;color:#E8E0D0;font-style:italic">${notes}</div>
+            </td></tr>` : ''}
+            <tr><td style="padding:16px 0 8px">
+              <div style="font-size:10px;letter-spacing:2px;color:#8A8276;text-transform:uppercase;margin-bottom:12px">Itens do Pedido</div>
+              <table width="100%" cellpadding="0" cellspacing="0">${itemLines}</table>
+            </td></tr>
+          </table>
+          <div style="margin-top:20px;padding:16px;background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.2);display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:10px;letter-spacing:3px;color:#8A8276;text-transform:uppercase">Total do Pedido</div>
+            <div style="font-family:Georgia,serif;font-size:24px;color:#C9A96E">${Number(total).toLocaleString('pt-MZ')} MT</div>
+          </div>
+        </td></tr>
+        <tr><td style="padding:20px 40px;border-top:1px solid rgba(201,169,110,0.08)">
+          <div style="font-size:10px;color:rgba(138,130,118,0.5);letter-spacing:2px;text-transform:uppercase">© 2026 Azzona · Delivery Automático · ID: ${id.slice(0,8)}</div>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`,
+  });
+}
+
+module.exports = { notifyOwner, confirmCustomer, notifyOwnerOrder };

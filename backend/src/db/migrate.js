@@ -61,6 +61,19 @@ async function migrate() {
       is_active   BOOLEAN      NOT NULL DEFAULT false,
       created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS orders (
+      id               UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
+      customer_name    VARCHAR(255)  NOT NULL,
+      customer_phone   VARCHAR(50)   NOT NULL,
+      customer_address TEXT          NOT NULL,
+      notes            TEXT          NOT NULL DEFAULT '',
+      items            JSONB         NOT NULL DEFAULT '[]',
+      total            NUMERIC(10,2) NOT NULL,
+      status           VARCHAR(20)   NOT NULL DEFAULT 'pending',
+      created_at       TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+      updated_at       TIMESTAMPTZ
+    );
   `);
 
   // Seed default settings (idempotent)

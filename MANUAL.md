@@ -1,5 +1,5 @@
 # AZZONA — Manual do Sistema
-**Versão 2.1 · Abril 2026**
+**Versão 2.2 · Abril 2026**
 
 ---
 
@@ -17,9 +17,10 @@
    - 3.1 Acesso e Login
    - 3.2 Dashboard — Visão do Dia
    - 3.3 Gestão de Reservas
-   - 3.4 DJ & Events
-   - 3.5 Cardápio
-   - 3.6 Configurações Globais
+   - 3.4 Pedidos Delivery
+   - 3.5 DJ & Events
+   - 3.6 Cardápio
+   - 3.7 Configurações Globais
 4. [Emails Automáticos](#4-emails-automáticos)
 5. [Fluxo de Trabalho Diário](#5-fluxo-de-trabalho-diário)
 6. [Segurança e Privacidade](#6-segurança-e-privacidade)
@@ -167,6 +168,11 @@ Ecrã principal após o login. Apresenta um resumo em tempo real do dia actual.
 
 > Ao confirmar uma reserva, o cliente recebe automaticamente um email de confirmação.
 
+**Pedidos Delivery:**
+Dois novos indicadores no dashboard mostram os pedidos delivery do dia:
+- **Pedidos Delivery Hoje** — total de pedidos recebidos + quantos estão pendentes
+- **Receita Delivery Hoje** — valor total dos pedidos do dia em MT
+
 **Botões de acção rápida:**
 - **💬 Mensagem de Ausência** — publica uma mensagem no site público
 - **🔒 Fechar o Dia / Abrir Reservas** — bloqueia ou desbloqueia o formulário de reservas
@@ -191,7 +197,58 @@ Menu lateral → **Reservas**
 
 ---
 
-### 3.4 DJ & Events
+### 3.4 Pedidos Delivery
+
+Menu lateral → **Pedidos ◇**
+
+Gestão completa de todos os pedidos feitos através da página de delivery.
+
+#### Modos de Vista
+
+| Modo | Descrição |
+|------|-----------|
+| **Por Data** | Mostra pedidos de um dia específico (barra dos últimos 7 dias + selector de data) |
+| **Histórico Completo** | Mostra todos os pedidos de sempre |
+
+#### Cada pedido mostra:
+- Nome, telefone e morada do cliente
+- Hora do pedido e estado actual
+- Lista de itens (expandível) com quantidades e subtotais
+- Total do pedido
+- Observações do cliente (se existirem)
+
+#### Estados do Pedido
+
+| Estado | Cor | Significado |
+|--------|-----|-------------|
+| **Pendente** | Âmbar | Pedido recebido, aguarda confirmação |
+| **Confirmado** | Azul | Pedido aceite, a preparar |
+| **Em Preparo** | Roxo | Na cozinha, a ser preparado |
+| **Entregue** | Verde | Pedido entregue com sucesso |
+| **Cancelado** | Vermelho | Pedido cancelado |
+
+#### Fluxo de Trabalho
+
+1. Chega pedido → estado **Pendente** → dono recebe email automático
+2. Confirmar no painel → estado **Confirmado**
+3. Cozinha começa → **Em Preparo**
+4. Saiu para entrega → **Entregue**
+
+#### Painel Lateral
+
+Mostra em tempo real o total de pedidos, quantos estão pendentes e a receita acumulada do período seleccionado.
+
+#### Email ao Dono — Novo Pedido Delivery
+
+Assim que um cliente submete um pedido, o dono recebe automaticamente um email com:
+- Nome, telefone e morada do cliente
+- Lista completa de itens com preços
+- Total do pedido
+- Observações
+
+---
+
+### 3.5 DJ & Events
 
 Menu lateral → **DJ & Events**
 
@@ -223,7 +280,7 @@ A tabela "Scheduled Talent" mostra todos os eventos com miniatura, nome, descri�
 
 ---
 
-### 3.5 Cardápio
+### 3.6 Cardápio
 
 Menu lateral → **Cardápio ◈**
 
@@ -271,7 +328,7 @@ O toggle em cada linha é o controlo principal do dia-a-dia:
 
 ---
 
-### 3.6 Configurações Globais
+### 3.7 Configurações Globais
 
 #### Fechar/Abrir Reservas
 
@@ -477,6 +534,7 @@ Toda a informação do sistema é guardada numa base de dados PostgreSQL alojada
 | `reservations` | Todas as reservas (nome, contacto, data, hora, estado) |
 | `dishes` | Menu completo com preços, categorias e disponibilidade |
 | `events` | Eventos DJ (nome, data, foto, estado publicado/oculto) |
+| `orders` | Pedidos delivery (cliente, itens JSON, total, estado, morada) |
 | `settings` | Configurações globais (reservas abertas, mensagem, Spotify) |
 
 **Persistência garantida:** os dados sobrevivem a todos os deploys, reinicios e actualizações do servidor. Nenhuma informação se perde.
@@ -497,6 +555,7 @@ Toda a informação do sistema é guardada numa base de dados PostgreSQL alojada
 | GET | `/api/reservations/booking-status` | Estado das reservas + URL Spotify |
 | GET | `/api/reservations/lookup?phone=` | CRM público (dados mínimos) |
 | GET | `/api/events/active` | DJs activos para o site |
+| POST | `/api/orders` | Criar pedido de delivery |
 
 #### Administrativos (requerem token JWT)
 
@@ -517,6 +576,9 @@ Toda a informação do sistema é guardada numa base de dados PostgreSQL alojada
 | PUT | `/api/admin/events/:id` | Editar evento DJ |
 | DELETE | `/api/admin/events/:id` | Remover evento DJ |
 | GET | `/api/admin/customers/search` | Pesquisa de clientes por telefone |
+| GET | `/api/admin/orders` | Listar pedidos (filtros: date, status) |
+| GET | `/api/admin/orders/today` | Resumo de pedidos do dia |
+| PUT | `/api/admin/orders/:id` | Actualizar estado do pedido |
 
 ---
 

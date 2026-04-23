@@ -207,10 +207,11 @@ function Login({ onLogin }) {
 
 // ── SIDEBAR ───────────────────────────────────────────────────
 const NAV = [
-  { id:'dashboard', label:'Dashboard', icon:'⊞' },
-  { id:'reservations', label:'Reservas', icon:'◫' },
-  { id:'djs', label:'DJ & Events', icon:'◉' },
-  { id:'menu', label:'Cardápio', icon:'◈' },
+  { id:'dashboard',    label:'Dashboard',  icon:'⊞' },
+  { id:'reservations', label:'Reservas',   icon:'◫' },
+  { id:'orders',       label:'Pedidos',    icon:'◇' },
+  { id:'djs',          label:'DJ & Events',icon:'◉' },
+  { id:'menu',         label:'Cardápio',   icon:'◈' },
 ];
 
 function Sidebar({ active, setActive, onLogout, haltDay, isOpen, onClose }) {
@@ -288,6 +289,7 @@ function Topbar({ title, haltDay, onMenuToggle }) {
 // ── DASHBOARD (TODAY) ─────────────────────────────────────────
 function Dashboard({ settings, onSettingsChange }) {
   const [data, setData] = useState({ reservations: [], total: 0, totalGuests: 0 });
+  const [ordersData, setOrdersData] = useState({ orders: [], total: 0, totalRevenue: 0 });
   const [loading, setLoading] = useState(true);
   const [showAbsence, setShowAbsence] = useState(false);
   const [absenceMsg, setAbsenceMsg] = useState(settings.absence_message || '');
@@ -297,8 +299,12 @@ function Dashboard({ settings, onSettingsChange }) {
   const load = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await api('GET', '/api/admin/reservations/today');
+      const [res, ord] = await Promise.all([
+        api('GET', '/api/admin/reservations/today'),
+        api('GET', '/api/admin/orders/today'),
+      ]);
       setData(res);
+      setOrdersData(ord);
     } catch (e) {
       console.error(e);
     } finally {
@@ -415,6 +421,35 @@ function Dashboard({ settings, onSettingsChange }) {
           <div style={{fontSize:11, letterSpacing:2, color:'var(--text)', textTransform:'uppercase', marginBottom:16}}>Pendentes de Confirmação</div>
           <div style={{fontFamily:'Playfair Display,serif', fontSize:60, fontWeight:400, lineHeight:1, color:'var(--amber)'}}>
             {loading ? '—' : data.reservations.filter(r=>r.status==='pending').length}
+          </div>
+        </div>
+      </div>
+
+      {/* Pedidos Delivery */}
+      <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:36}}>
+        <div style={{background:'var(--dark3)', border:'1px solid rgba(201,169,110,0.2)', padding:'22px 28px', display:'flex', alignItems:'center', gap:20}}>
+          <div style={{fontSize:28, opacity:0.7}}>🛵</div>
+          <div>
+            <div style={{fontSize:10, letterSpacing:2, color:'var(--text)', textTransform:'uppercase', marginBottom:6}}>Pedidos Delivery Hoje</div>
+            <div style={{display:'flex', alignItems:'baseline', gap:12}}>
+              <div style={{fontFamily:'Playfair Display,serif', fontSize:48, fontWeight:400, lineHeight:1}}>
+                {loading ? '—' : ordersData.total}
+              </div>
+              {!loading && ordersData.total > 0 && (
+                <span style={{fontSize:10, letterSpacing:1, color:'var(--gold)', textTransform:'uppercase', background:'var(--gold-dim)', padding:'3px 8px'}}>
+                  {ordersData.orders.filter(o=>o.status==='pending').length} pendentes
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        <div style={{background:'var(--dark3)', border:'1px solid rgba(201,169,110,0.2)', padding:'22px 28px', display:'flex', alignItems:'center', gap:20}}>
+          <div style={{fontSize:28, opacity:0.7}}>💰</div>
+          <div>
+            <div style={{fontSize:10, letterSpacing:2, color:'var(--text)', textTransform:'uppercase', marginBottom:6}}>Receita Delivery Hoje</div>
+            <div style={{fontFamily:'Playfair Display,serif', fontSize:32, fontWeight:400, lineHeight:1, color:'var(--gold)'}}>
+              {loading ? '—' : `${Number(ordersData.totalRevenue).toLocaleString('pt-MZ')} MT`}
+            </div>
           </div>
         </div>
       </div>
@@ -900,6 +935,206 @@ function DJManager({ settings, onSettingsChange }) {
   );
 }
 
+// ── ORDERS MANAGER ───────────────────────────────────────────
+const orderStatusColor = s => ({ pending:'var(--amber)', confirmed:'#3498DB', preparing:'#9B59B6', delivered:'var(--green)', cancelled:'var(--red)' }[s] || 'var(--text)');
+const orderStatusLabel = s => ({ pending:'Pendente', confirmed:'Confirmado', preparing:'Em Preparo', delivered:'Entregue', cancelled:'Cancelado' }[s] || s);
+
+function OrdersManager() {
+  const [selectedDate, setSelectedDate] = useState(today());
+  const [showAll, setShowAll] = useState(false);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [filter, setFilter] = useState('all');
+  const [toast, setToast] = useState('');
+  const [expanded, setExpanded] = useState(null);
+
+  const load = useCallback(async (date, all) => {
+    setLoading(true);
+    try {
+      const qs = all ? '' : `?date=${date}`;
+      const res = await api('GET', `/api/admin/orders${qs}`);
+      setOrders(res);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { load(selectedDate, showAll); }, [selectedDate, showAll, load]);
+
+  const updateStatus = async (id, status) => {
+    try {
+      await api('PUT', `/api/admin/orders/${id}`, { status });
+      setToast(orderStatusLabel(status));
+      setTimeout(() => setToast(''), 2500);
+      await load(selectedDate, showAll);
+    } catch (e) { console.error(e); }
+  };
+
+  const filtered = orders.filter(o => filter === 'all' || o.status === filter);
+  const pending = orders.filter(o => o.status === 'pending').length;
+  const revenue = orders.reduce((s, o) => s + Number(o.total), 0);
+
+  const weekDays = Array.from({length:7}, (_,i) => {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    return d.toISOString().split('T')[0];
+  });
+  const dayLabel = d => new Date(d+'T12:00:00').toLocaleDateString('pt-PT',{weekday:'short',day:'numeric'});
+
+  const fmtTime = ts => ts ? new Date(ts).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}) : '';
+
+  return (
+    <div className="pg">
+      {toast && (
+        <div style={{position:'fixed',top:20,right:20,zIndex:999,padding:'12px 20px',background:'rgba(39,174,96,0.9)',border:'1px solid var(--green)',fontSize:12,color:'white',backdropFilter:'blur(8px)'}}>
+          ✓ {toast}
+        </div>
+      )}
+
+      <div className="pg-hd" style={{marginBottom:24}}>
+        <div>
+          <div style={{fontSize:11,letterSpacing:3,color:'var(--gold)',textTransform:'uppercase',marginBottom:6}}>Delivery Management</div>
+          <div style={{fontFamily:'Playfair Display,serif',fontSize:40}}>Pedidos</div>
+          <div style={{fontSize:13,color:'var(--text)',marginTop:6}}>{orders.length} pedidos · {pending} pendentes · {revenue.toLocaleString('pt-MZ')} MT</div>
+        </div>
+        <div style={{display:'flex',gap:10,marginTop:8,flexWrap:'wrap'}}>
+          <button onClick={()=>setShowAll(false)} style={{padding:'8px 16px',background:!showAll?'var(--gold-dim)':'transparent',border:'1px solid var(--border)',color:!showAll?'var(--gold)':'var(--text)',fontSize:10,letterSpacing:2,textTransform:'uppercase',cursor:'pointer'}}>
+            Por Data
+          </button>
+          <button onClick={()=>setShowAll(true)} style={{padding:'8px 16px',background:showAll?'var(--gold-dim)':'transparent',border:'1px solid var(--border)',color:showAll?'var(--gold)':'var(--text)',fontSize:10,letterSpacing:2,textTransform:'uppercase',cursor:'pointer'}}>
+            Histórico Completo
+          </button>
+        </div>
+      </div>
+
+      {!showAll && (
+        <div style={{display:'flex',gap:0,marginBottom:20,overflowX:'auto'}}>
+          {weekDays.map((d,i)=>(
+            <button key={d} onClick={()=>setSelectedDate(d)} style={{
+              padding:'10px 16px',background:'transparent',
+              border:'1px solid var(--border)',borderLeft:i>0?'none':'1px solid var(--border)',
+              color:selectedDate===d?'var(--gold)':'var(--text)',
+              fontSize:10,letterSpacing:2,textTransform:'uppercase',cursor:'pointer',
+              minWidth:80,position:'relative',whiteSpace:'nowrap',flexShrink:0,
+            }}>
+              {dayLabel(d)}
+              {selectedDate===d && <div style={{position:'absolute',bottom:0,left:0,right:0,height:2,background:'var(--gold)'}}></div>}
+            </button>
+          ))}
+          <input type="date" value={selectedDate} onChange={e=>setSelectedDate(e.target.value)}
+            style={{marginLeft:8,background:'transparent',border:'1px solid var(--border)',padding:'8px 12px',color:'var(--cream)',fontSize:12,outline:'none',colorScheme:'dark',cursor:'pointer',flexShrink:0}}/>
+        </div>
+      )}
+
+      <div className="s2a">
+        <div>
+          {loading ? (
+            <div style={{padding:'60px',display:'flex',justifyContent:'center',border:'1px solid var(--border)'}}>
+              <Spinner size={24} color="var(--gold)"/>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div style={{padding:'60px',textAlign:'center',color:'var(--text)',fontSize:14,border:'1px solid var(--border)',letterSpacing:2}}>
+              {showAll ? 'Sem pedidos registados' : `Sem pedidos para ${fmtDate(selectedDate)}`}
+            </div>
+          ) : filtered.map(o => {
+            const items = Array.isArray(o.items) ? o.items : [];
+            const isExp = expanded === o.id;
+            return (
+              <div key={o.id} style={{background:'var(--dark3)',border:`1px solid ${o.status==='pending'?'rgba(230,126,34,0.3)':'var(--border)'}`,padding:'20px',marginBottom:12}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:12}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8,flexWrap:'wrap'}}>
+                      <span style={{fontSize:11,letterSpacing:2,color:'var(--gold)',textTransform:'uppercase'}}>{fmtTime(o.created_at)}</span>
+                      <span style={{padding:'3px 10px',background:`${orderStatusColor(o.status)}1a`,border:`1px solid ${orderStatusColor(o.status)}4d`,fontSize:9,letterSpacing:2,color:orderStatusColor(o.status),textTransform:'uppercase',whiteSpace:'nowrap'}}>
+                        ● {orderStatusLabel(o.status)}
+                      </span>
+                      {showAll && <span style={{fontSize:10,color:'var(--text)'}}>{fmtDate(o.created_at?.split('T')[0])}</span>}
+                    </div>
+                    <div style={{fontFamily:'Playfair Display,serif',fontSize:20,marginBottom:4}}>{o.customer_name}</div>
+                    <div style={{fontSize:12,color:'var(--text)',marginBottom:4}}>{o.customer_phone}</div>
+                    <div style={{fontSize:12,color:'var(--text)',marginBottom:8}}>📍 {o.customer_address}</div>
+
+                    <button onClick={()=>setExpanded(isExp?null:o.id)} style={{background:'none',border:'none',color:'var(--gold)',fontSize:11,letterSpacing:1,cursor:'pointer',padding:0,textDecoration:'underline',marginBottom:isExp?10:0}}>
+                      {isExp ? '▲ Ocultar itens' : `▼ Ver ${items.length} item${items.length!==1?'s':''}`}
+                    </button>
+
+                    {isExp && (
+                      <div style={{background:'rgba(0,0,0,0.3)',padding:'10px 14px',marginTop:4}}>
+                        {items.map((it,idx)=>(
+                          <div key={idx} style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'var(--cream)',padding:'5px 0',borderBottom:idx<items.length-1?'1px solid rgba(201,169,110,0.08)':'none'}}>
+                            <span>{it.qty}× {it.name}</span>
+                            <span style={{color:'var(--gold)'}}>{(it.price*it.qty).toLocaleString('pt-MZ')} MT</span>
+                          </div>
+                        ))}
+                        {o.notes && <div style={{marginTop:8,fontSize:12,color:'var(--text)',fontStyle:'italic'}}>📝 {o.notes}</div>}
+                        <div style={{marginTop:10,paddingTop:8,borderTop:'1px solid rgba(201,169,110,0.15)',display:'flex',justifyContent:'space-between'}}>
+                          <span style={{fontSize:11,letterSpacing:2,color:'var(--text)',textTransform:'uppercase'}}>Total</span>
+                          <span style={{fontFamily:'Playfair Display,serif',fontSize:18,color:'var(--gold)'}}>{Number(o.total).toLocaleString('pt-MZ')} MT</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{fontFamily:'Playfair Display,serif',fontSize:22,color:'var(--gold)',flexShrink:0}}>
+                    {Number(o.total).toLocaleString('pt-MZ')} MT
+                  </div>
+                </div>
+
+                {o.status !== 'cancelled' && o.status !== 'delivered' && (
+                  <div style={{display:'flex',gap:8,marginTop:16,flexWrap:'wrap'}}>
+                    {o.status === 'pending' && (
+                      <button onClick={()=>updateStatus(o.id,'confirmed')} style={{padding:'7px 14px',background:'rgba(52,152,219,0.1)',border:'1px solid rgba(52,152,219,0.4)',color:'#3498DB',fontSize:10,letterSpacing:1,cursor:'pointer'}}>✓ Confirmar</button>
+                    )}
+                    {o.status === 'confirmed' && (
+                      <button onClick={()=>updateStatus(o.id,'preparing')} style={{padding:'7px 14px',background:'rgba(155,89,182,0.1)',border:'1px solid rgba(155,89,182,0.4)',color:'#9B59B6',fontSize:10,letterSpacing:1,cursor:'pointer'}}>🍳 Em Preparo</button>
+                    )}
+                    {(o.status === 'confirmed' || o.status === 'preparing') && (
+                      <button onClick={()=>updateStatus(o.id,'delivered')} style={{padding:'7px 14px',background:'rgba(39,174,96,0.1)',border:'1px solid rgba(39,174,96,0.4)',color:'var(--green)',fontSize:10,letterSpacing:1,cursor:'pointer'}}>🛵 Entregue</button>
+                    )}
+                    <button onClick={()=>updateStatus(o.id,'cancelled')} style={{padding:'7px 14px',background:'rgba(192,57,43,0.1)',border:'1px solid rgba(192,57,43,0.3)',color:'var(--red)',fontSize:10,letterSpacing:1,cursor:'pointer'}}>✕ Cancelar</button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
+            <div style={{background:'var(--dark3)',border:'1px solid var(--border)',padding:'20px',textAlign:'center'}}>
+              <div style={{fontSize:36,color:'var(--cream)',fontFamily:'Playfair Display,serif'}}>{filtered.length}</div>
+              <div style={{fontSize:9,letterSpacing:2,color:'var(--text)',textTransform:'uppercase',marginTop:4}}>Pedidos</div>
+            </div>
+            <div style={{background:'var(--dark3)',border:'1px solid rgba(230,126,34,0.3)',padding:'20px',textAlign:'center'}}>
+              <div style={{fontSize:36,color:'var(--amber)',fontFamily:'Playfair Display,serif'}}>{pending}</div>
+              <div style={{fontSize:9,letterSpacing:2,color:'var(--amber)',textTransform:'uppercase',marginTop:4}}>Pendentes</div>
+            </div>
+          </div>
+          <div style={{background:'var(--dark3)',border:'1px solid var(--border)',padding:'18px',marginBottom:16,textAlign:'center'}}>
+            <div style={{fontSize:9,letterSpacing:2,color:'var(--text)',textTransform:'uppercase',marginBottom:6}}>Receita</div>
+            <div style={{fontFamily:'Playfair Display,serif',fontSize:24,color:'var(--gold)'}}>{revenue.toLocaleString('pt-MZ')} MT</div>
+          </div>
+
+          <div style={{background:'var(--dark3)',border:'1px solid var(--border)',padding:'20px',marginBottom:16}}>
+            <div style={{fontSize:11,letterSpacing:2,color:'var(--cream)',textTransform:'uppercase',marginBottom:16}}>⚌ Filtrar</div>
+            {[['all','Todos'],['pending','Pendentes'],['confirmed','Confirmados'],['preparing','Em Preparo'],['delivered','Entregues'],['cancelled','Cancelados']].map(([f,label])=>(
+              <label key={f} style={{display:'flex',alignItems:'center',gap:10,marginBottom:10,cursor:'pointer',fontSize:13,color:filter===f?'var(--cream)':'var(--text)'}}>
+                <input type="radio" name="ofilter" checked={filter===f} onChange={()=>setFilter(f)} style={{accentColor:'var(--gold)'}}/>
+                {label}
+              </label>
+            ))}
+          </div>
+
+          <div style={{background:'var(--dark3)',border:'1px solid var(--border)',padding:'16px',fontSize:12,color:'var(--text)',lineHeight:1.7}}>
+            <div style={{fontSize:10,letterSpacing:2,color:'var(--gold)',textTransform:'uppercase',marginBottom:10}}>Fluxo do Pedido</div>
+            <div>🟡 Pendente → ✅ Confirmado</div>
+            <div>✅ Confirmado → 🟣 Em Preparo</div>
+            <div>🟣 Em Preparo → 🟢 Entregue</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── MENU MANAGER ─────────────────────────────────────────────
 const CATEGORIES = ['Grelhados','Mariscos','Internacional','Comfort Food','Breakfood','Cocktails','Outros'];
 
@@ -1135,7 +1370,7 @@ function App() {
   const login = () => setAuthed(true);
   const logout = () => { clearToken(); setAuthed(false); };
 
-  const screenTitles = { dashboard:'Management Portal', reservations:'Reservas', djs:'DJ & Events', menu:'Cardápio' };
+  const screenTitles = { dashboard:'Management Portal', reservations:'Reservas', orders:'Pedidos Delivery', djs:'DJ & Events', menu:'Cardápio' };
 
   if (!authed) return <Login onLogin={login}/>;
 
@@ -1156,10 +1391,11 @@ function App() {
           onMenuToggle={() => setSidebarOpen(o => !o)}
         />
         <div style={{flex:1, overflowY:'auto', background:'var(--dark)'}}>
-          {screen==='dashboard' && <Dashboard settings={settings} onSettingsChange={setSettings}/>}
+          {screen==='dashboard'    && <Dashboard settings={settings} onSettingsChange={setSettings}/>}
           {screen==='reservations' && <Reservations/>}
-          {screen==='djs' && <DJManager settings={settings} onSettingsChange={setSettings}/>}
-          {screen==='menu' && <MenuManager/>}
+          {screen==='orders'       && <OrdersManager/>}
+          {screen==='djs'          && <DJManager settings={settings} onSettingsChange={setSettings}/>}
+          {screen==='menu'         && <MenuManager/>}
         </div>
       </div>
     </div>
