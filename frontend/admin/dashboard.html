@@ -601,13 +601,15 @@ function DJManager({ settings, onSettingsChange }) {
   const [spotifyToast, setSpotifyToast] = useState('');
   const fileRef = useRef();
 
-  // Converte URL pública do Spotify em URL de embed
+  // Converte qualquer URL pública do Spotify em URL de embed
   function toEmbedUrl(raw) {
     try {
-      const url = new URL(raw.trim());
+      const url = new URL(raw.trim().replace(/\\$/, ''));
       if (!url.hostname.includes('spotify.com')) return null;
-      // Remover /embed/ se já tiver, depois recolocar
-      const path = url.pathname.replace('/embed/', '/').replace(/^\//, '');
+      const path = url.pathname
+        .replace('/embed', '')          // remover /embed se já tiver
+        .replace(/^\/intl-[a-z-]+/, '') // remover prefixo de locale ex: /intl-pt
+        .replace(/^\//, '');            // remover / inicial
       return `https://open.spotify.com/embed/${path}?utm_source=generator&theme=0`;
     } catch { return null; }
   }
