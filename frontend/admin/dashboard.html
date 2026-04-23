@@ -37,6 +37,33 @@ input, select, textarea, button { font-family: 'Syne', sans-serif; }
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── Responsive layout classes ── */
+.pg { padding: 36px 40px; overflow-y: auto; flex: 1; position: relative; }
+.pg-hd { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 36px; }
+.pg-btns { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+.sg3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 36px; }
+.s2a { display: grid; grid-template-columns: 1fr 280px; gap: 24px; }
+.s2b { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
+.f2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+.lbx { position: relative; width: 480px; background: rgba(17,17,17,0.95); border: 1px solid var(--border); padding: 56px 48px; backdrop-filter: blur(20px); }
+.tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border); }
+.tbl-hd { display: grid; grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1.2fr; padding: 12px 24px; border-bottom: 1px solid var(--border); min-width: 580px; }
+.tbl-row { display: grid; grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1.2fr; padding: 18px 24px; align-items: center; transition: background 0.2s; min-width: 580px; }
+.djt-hd { display: grid; grid-template-columns: 100px 1fr 1fr 1fr 120px; padding: 12px 24px; border-bottom: 1px solid var(--border); min-width: 540px; }
+.djt-row { display: grid; grid-template-columns: 100px 1fr 1fr 1fr 120px; padding: 18px 24px; align-items: center; min-width: 540px; }
+
+@media (max-width: 960px) {
+  .s2a, .s2b { grid-template-columns: 1fr; }
+  .sg3 { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  .pg { padding: 20px 16px; }
+  .pg-hd { flex-direction: column; gap: 14px; }
+  .sg3 { grid-template-columns: 1fr; }
+  .f2 { grid-template-columns: 1fr; }
+  .lbx { width: calc(100vw - 32px); padding: 36px 20px; }
+}
 </style>
 </head>
 <body>
@@ -121,11 +148,11 @@ function Login({ onLogin }) {
   };
 
   return (
-    <div style={{minHeight:'100vh', background:'var(--dark)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', position:'relative', overflow:'hidden'}}>
+    <div style={{minHeight:'100vh', background:'var(--dark)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', position:'relative', overflow:'hidden', padding:'16px'}}>
       <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(ellipse at 20% 50%, rgba(201,169,110,0.04) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(201,169,110,0.03) 0%, transparent 50%)'}}></div>
       <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(201,169,110,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(201,169,110,0.03) 1px, transparent 1px)',backgroundSize:'60px 60px',opacity:0.5}}></div>
 
-      <div style={{position:'relative', width:480, background:'rgba(17,17,17,0.95)', border:'1px solid var(--border)', padding:'56px 48px', backdropFilter:'blur(20px)'}}>
+      <div className="lbx">
         <div style={{textAlign:'center', marginBottom:40}}>
           <svg width="32" height="32" viewBox="0 0 32 32" style={{marginBottom:16}}>
             <line x1="8" y1="8" x2="24" y2="24" stroke="var(--gold)" strokeWidth="2"/>
@@ -179,7 +206,6 @@ function Sidebar({ active, setActive, onLogout, haltDay, isOpen, onClose }) {
   const go = id => { setActive(id); onClose(); };
   return (
     <>
-      {/* Overlay mobile */}
       {isOpen && (
         <div onClick={onClose} style={{
           position:'fixed', inset:0, background:'rgba(0,0,0,0.6)',
@@ -232,16 +258,15 @@ function Sidebar({ active, setActive, onLogout, haltDay, isOpen, onClose }) {
 function Topbar({ title, haltDay, onMenuToggle }) {
   return (
     <div style={{height:56, background:'var(--dark2)', borderBottom:'1px solid var(--border)', display:'flex', alignItems:'center', padding:'0 20px', gap:12, flexShrink:0}}>
-      {/* Hamburger */}
       <button onClick={onMenuToggle} style={{background:'none', border:'none', cursor:'pointer', padding:'6px', display:'flex', flexDirection:'column', gap:5, flexShrink:0}}>
         <span style={{display:'block', width:20, height:1.5, background:'var(--gold)', borderRadius:2}}></span>
         <span style={{display:'block', width:14, height:1.5, background:'var(--gold)', borderRadius:2}}></span>
         <span style={{display:'block', width:20, height:1.5, background:'var(--gold)', borderRadius:2}}></span>
       </button>
-      <div style={{flex:1}}>
-        <div style={{color:'var(--gold)', fontSize:13, letterSpacing:2, fontWeight:600}}>{title}</div>
+      <div style={{flex:1, minWidth:0}}>
+        <div style={{color:'var(--gold)', fontSize:13, letterSpacing:2, fontWeight:600, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{title}</div>
       </div>
-      <div style={{display:'flex', alignItems:'center', gap:12}}>
+      <div style={{display:'flex', alignItems:'center', gap:12, flexShrink:0}}>
         {haltDay && <span style={{fontSize:9, letterSpacing:2, color:'var(--red)', textTransform:'uppercase', background:'rgba(192,57,43,0.1)', padding:'4px 8px', border:'1px solid rgba(192,57,43,0.3)', whiteSpace:'nowrap'}}>◉ FECHADO</span>}
         <div style={{width:32, height:32, background:'var(--gold-dim)', border:'1px solid var(--border)', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, color:'var(--gold)', flexShrink:0}}>A</div>
       </div>
@@ -318,19 +343,19 @@ function Dashboard({ settings, onSettingsChange }) {
   const dateLabel = new Date().toLocaleDateString('pt-PT', { weekday:'long', day:'numeric', month:'long' });
 
   return (
-    <div style={{padding:'36px 40px', overflowY:'auto', flex:1, position:'relative'}}>
+    <div className="pg">
       {toast && (
         <div style={{position:'fixed', top:20, right:20, zIndex:999, padding:'12px 20px', background:toast.err?'rgba(192,57,43,0.9)':'rgba(39,174,96,0.9)', border:`1px solid ${toast.err?'var(--red)':'var(--green)'}`, fontSize:12, letterSpacing:1, color:'white', backdropFilter:'blur(8px)'}}>
           {toast.err ? '✕' : '✓'} {toast.msg}
         </div>
       )}
 
-      <div style={{display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:36}}>
+      <div className="pg-hd">
         <div>
           <div style={{fontSize:11, letterSpacing:3, color:'var(--gold)', textTransform:'uppercase', marginBottom:6}}>{dateLabel}</div>
           <div style={{fontFamily:'Playfair Display,serif', fontSize:40, fontWeight:400}}>Daily Overview</div>
         </div>
-        <div style={{display:'flex', gap:12, marginTop:8}}>
+        <div className="pg-btns">
           <button onClick={()=>setShowAbsence(s=>!s)} style={{padding:'10px 20px', background:'transparent', border:'1px solid var(--border)', color:'var(--cream)', fontSize:10, letterSpacing:2, textTransform:'uppercase', cursor:'pointer', display:'flex', alignItems:'center', gap:8}}>
             💬 Mensagem de Ausência
           </button>
@@ -357,7 +382,7 @@ function Dashboard({ settings, onSettingsChange }) {
         </div>
       )}
 
-      <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:16, marginBottom:36}}>
+      <div className="sg3">
         <div style={{background:'var(--dark3)', border:'1px solid var(--border)', padding:'28px 28px 24px'}}>
           <div style={{fontSize:11, letterSpacing:2, color:'var(--text)', textTransform:'uppercase', marginBottom:16}}>Reservas para Hoje</div>
           <div style={{display:'flex', alignItems:'flex-end', gap:14}}>
@@ -383,7 +408,7 @@ function Dashboard({ settings, onSettingsChange }) {
         </div>
       </div>
 
-      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20}}>
+      <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20, flexWrap:'wrap', gap:12}}>
         <div style={{fontFamily:'Playfair Display,serif', fontSize:28, fontWeight:400}}>Today's Roster</div>
         <button onClick={load} style={{padding:'6px 14px', background:'transparent', border:'1px solid var(--border)', color:'var(--text)', fontSize:10, letterSpacing:2, textTransform:'uppercase', cursor:'pointer'}}>↺ Actualizar</button>
       </div>
@@ -395,38 +420,41 @@ function Dashboard({ settings, onSettingsChange }) {
       ) : data.reservations.length === 0 ? (
         <div style={{padding:'60px', textAlign:'center', color:'var(--text)', fontSize:14, border:'1px solid var(--border)', letterSpacing:2}}>Sem reservas para hoje</div>
       ) : (
-        <div style={{background:'var(--dark3)', border:'1px solid var(--border)', overflow:'hidden'}}>
-          <div style={{display:'grid', gridTemplateColumns:'2fr 1.5fr 1.5fr 1fr 1.2fr', padding:'12px 24px', borderBottom:'1px solid var(--border)'}}>
-            {['Nome','Contacto','Hora / Detalhes','Estado','Acções'].map(h=>(
-              <div key={h} style={{fontSize:9, letterSpacing:2, color:'var(--text)', textTransform:'uppercase'}}>{h}</div>
+        <div style={{background:'var(--dark3)'}}>
+          <div className="tbl-wrap">
+            <div className="tbl-hd">
+              {['Nome','Contacto','Hora / Detalhes','Estado','Acções'].map(h=>(
+                <div key={h} style={{fontSize:9, letterSpacing:2, color:'var(--text)', textTransform:'uppercase'}}>{h}</div>
+              ))}
+            </div>
+            {data.reservations.map((r,i)=>(
+              <div key={r.id} className="tbl-row"
+                style={{borderBottom:i<data.reservations.length-1?'1px solid rgba(201,169,110,0.06)':'none'}}
+                onMouseEnter={e=>e.currentTarget.style.background='rgba(201,169,110,0.03)'}
+                onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                <div>
+                  <div style={{fontSize:14}}>{r.customer_name}</div>
+                  {r.notes && <div style={{fontSize:11, color:'var(--text)', marginTop:3}}>{r.notes}</div>}
+                </div>
+                <div style={{fontSize:13, color:'var(--text)'}}>{r.customer_phone}</div>
+                <div>
+                  <div style={{fontSize:16, color:'var(--gold)', fontWeight:600}}>{r.time}</div>
+                  <div style={{fontSize:11, color:'var(--text)'}}>{r.guests} pessoas</div>
+                </div>
+                <div style={{display:'flex', alignItems:'center', fontSize:12}}>
+                  {statusDot(r.status)}{statusLabel(r.status)}
+                </div>
+                <div style={{display:'flex', gap:8}}>
+                  {r.status==='pending' && (
+                    <button onClick={()=>updateStatus(r.id,'confirmed')} style={{padding:'5px 12px', background:'rgba(39,174,96,0.1)', border:'1px solid rgba(39,174,96,0.3)', color:'var(--green)', fontSize:10, letterSpacing:1, cursor:'pointer'}}>✓</button>
+                  )}
+                  {r.status !== 'cancelled' && (
+                    <button onClick={()=>updateStatus(r.id,'cancelled')} style={{padding:'5px 12px', background:'rgba(192,57,43,0.1)', border:'1px solid rgba(192,57,43,0.3)', color:'var(--red)', fontSize:10, letterSpacing:1, cursor:'pointer'}}>✕</button>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
-          {data.reservations.map((r,i)=>(
-            <div key={r.id} style={{display:'grid', gridTemplateColumns:'2fr 1.5fr 1.5fr 1fr 1.2fr', padding:'18px 24px', borderBottom:i<data.reservations.length-1?'1px solid rgba(201,169,110,0.06)':'none', alignItems:'center', transition:'background 0.2s'}}
-              onMouseEnter={e=>e.currentTarget.style.background='rgba(201,169,110,0.03)'}
-              onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-              <div>
-                <div style={{fontSize:14}}>{r.customer_name}</div>
-                {r.notes && <div style={{fontSize:11, color:'var(--text)', marginTop:3}}>{r.notes}</div>}
-              </div>
-              <div style={{fontSize:13, color:'var(--text)'}}>{r.customer_phone}</div>
-              <div>
-                <div style={{fontSize:16, color:'var(--gold)', fontWeight:600}}>{r.time}</div>
-                <div style={{fontSize:11, color:'var(--text)'}}>{r.guests} pessoas</div>
-              </div>
-              <div style={{display:'flex', alignItems:'center', fontSize:12}}>
-                {statusDot(r.status)}{statusLabel(r.status)}
-              </div>
-              <div style={{display:'flex', gap:8}}>
-                {r.status==='pending' && (
-                  <button onClick={()=>updateStatus(r.id,'confirmed')} style={{padding:'5px 12px', background:'rgba(39,174,96,0.1)', border:'1px solid rgba(39,174,96,0.3)', color:'var(--green)', fontSize:10, letterSpacing:1, cursor:'pointer'}}>✓</button>
-                )}
-                {r.status !== 'cancelled' && (
-                  <button onClick={()=>updateStatus(r.id,'cancelled')} style={{padding:'5px 12px', background:'rgba(192,57,43,0.1)', border:'1px solid rgba(192,57,43,0.3)', color:'var(--red)', fontSize:10, letterSpacing:1, cursor:'pointer'}}>✕</button>
-                )}
-              </div>
-            </div>
-          ))}
         </div>
       )}
     </div>
@@ -470,7 +498,6 @@ function Reservations() {
   const totalGuests = reservations.reduce((s,r) => s + r.guests, 0);
   const pending = reservations.filter(r => r.status === 'pending').length;
 
-  // Generate week days starting today
   const weekDays = Array.from({length:7}, (_,i) => {
     const d = new Date();
     d.setDate(d.getDate() + i);
@@ -483,19 +510,19 @@ function Reservations() {
   };
 
   return (
-    <div style={{padding:'36px 40px', overflowY:'auto', flex:1}}>
+    <div className="pg">
       {toast && (
         <div style={{position:'fixed', top:20, right:20, zIndex:999, padding:'12px 20px', background:'rgba(39,174,96,0.9)', border:'1px solid var(--green)', fontSize:12, color:'white', backdropFilter:'blur(8px)'}}>
           ✓ {toast}
         </div>
       )}
 
-      <div style={{display:'flex', alignItems:'flex-end', justifyContent:'space-between', marginBottom:32}}>
+      <div className="pg-hd" style={{marginBottom:24}}>
         <div>
           <div style={{fontSize:11, letterSpacing:3, color:'var(--gold)', textTransform:'uppercase', marginBottom:6}}>Schedule Management</div>
           <div style={{fontFamily:'Playfair Display,serif', fontSize:40}}>Reservations</div>
         </div>
-        <div style={{display:'flex', alignItems:'center', gap:12}}>
+        <div style={{marginTop:8}}>
           <input type="date" value={selectedDate} onChange={e=>setSelectedDate(e.target.value)}
             style={{background:'transparent', border:'1px solid var(--border)', padding:'8px 12px', color:'var(--cream)', fontSize:12, outline:'none', colorScheme:'dark', cursor:'pointer'}}/>
         </div>
@@ -508,7 +535,7 @@ function Reservations() {
             border:'1px solid var(--border)', borderLeft:i>0?'none':'1px solid var(--border)',
             color:selectedDate===d?'var(--gold)':'var(--text)',
             fontSize:10, letterSpacing:2, textTransform:'uppercase', cursor:'pointer',
-            minWidth:80, position:'relative', whiteSpace:'nowrap',
+            minWidth:80, position:'relative', whiteSpace:'nowrap', flexShrink:0,
           }}>
             {dayLabel(d)}
             {selectedDate===d && <div style={{position:'absolute', bottom:0, left:0, right:0, height:2, background:'var(--gold)'}}></div>}
@@ -516,7 +543,7 @@ function Reservations() {
         ))}
       </div>
 
-      <div style={{display:'grid', gridTemplateColumns:'1fr 280px', gap:24}}>
+      <div className="s2a">
         <div>
           {loading ? (
             <div style={{padding:'60px', display:'flex', justifyContent:'center', border:'1px solid var(--border)'}}>
@@ -527,23 +554,23 @@ function Reservations() {
               Sem reservas para {fmtDate(selectedDate)}
             </div>
           ) : filtered.map(r => (
-            <div key={r.id} style={{background:'var(--dark3)', border:`1px solid ${r.status==='pending'?'rgba(230,126,34,0.3)':'var(--border)'}`, padding:'24px', marginBottom:16, position:'relative'}}>
-              <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start'}}>
-                <div>
-                  <div style={{display:'flex', alignItems:'center', gap:12, marginBottom:8}}>
+            <div key={r.id} style={{background:'var(--dark3)', border:`1px solid ${r.status==='pending'?'rgba(230,126,34,0.3)':'var(--border)'}`, padding:'20px', marginBottom:16, position:'relative'}}>
+              <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12}}>
+                <div style={{minWidth:0}}>
+                  <div style={{display:'flex', alignItems:'center', gap:10, marginBottom:8, flexWrap:'wrap'}}>
                     <span style={{fontSize:11, letterSpacing:2, color:'var(--gold)', textTransform:'uppercase'}}>{r.time}</span>
-                    <span style={{padding:'3px 10px', background:r.status==='pending'?'rgba(230,126,34,0.1)':'rgba(39,174,96,0.1)', border:`1px solid ${r.status==='pending'?'rgba(230,126,34,0.3)':'rgba(39,174,96,0.3)'}`, fontSize:9, letterSpacing:2, color:r.status==='pending'?'var(--amber)':'var(--green)', textTransform:'uppercase'}}>● {statusLabel(r.status)}</span>
+                    <span style={{padding:'3px 10px', background:r.status==='pending'?'rgba(230,126,34,0.1)':'rgba(39,174,96,0.1)', border:`1px solid ${r.status==='pending'?'rgba(230,126,34,0.3)':'rgba(39,174,96,0.3)'}`, fontSize:9, letterSpacing:2, color:r.status==='pending'?'var(--amber)':'var(--green)', textTransform:'uppercase', whiteSpace:'nowrap'}}>● {statusLabel(r.status)}</span>
                   </div>
-                  <div style={{fontFamily:'Playfair Display,serif', fontSize:22, marginBottom:4}}>{r.customer_name}</div>
+                  <div style={{fontFamily:'Playfair Display,serif', fontSize:20, marginBottom:4}}>{r.customer_name}</div>
                   <div style={{fontSize:12, color:'var(--text)'}}>{r.customer_phone} · {r.guests} pessoas</div>
                   {r.notes && <div style={{marginTop:8, fontSize:12, color:'var(--text)', fontStyle:'italic', borderLeft:'2px solid var(--gold-dim)', paddingLeft:10}}>{r.notes}</div>}
                 </div>
                 {r.status !== 'cancelled' && (
-                  <div style={{display:'flex', flexDirection:'column', gap:8, marginTop:4}}>
+                  <div style={{display:'flex', flexDirection:'column', gap:8, marginTop:4, flexShrink:0}}>
                     {r.status==='pending' && (
-                      <button onClick={()=>updateStatus(r.id,'confirmed')} style={{padding:'8px 20px', background:'transparent', border:'1px solid rgba(39,174,96,0.4)', color:'var(--green)', fontSize:10, letterSpacing:2, cursor:'pointer'}}>✓ Confirmar</button>
+                      <button onClick={()=>updateStatus(r.id,'confirmed')} style={{padding:'8px 16px', background:'transparent', border:'1px solid rgba(39,174,96,0.4)', color:'var(--green)', fontSize:10, letterSpacing:2, cursor:'pointer', whiteSpace:'nowrap'}}>✓ Confirmar</button>
                     )}
-                    <button onClick={()=>updateStatus(r.id,'cancelled')} style={{padding:'8px 20px', background:'transparent', border:'1px solid rgba(201,169,110,0.2)', color:'var(--text)', fontSize:10, letterSpacing:2, cursor:'pointer'}}>✕ Cancelar</button>
+                    <button onClick={()=>updateStatus(r.id,'cancelled')} style={{padding:'8px 16px', background:'transparent', border:'1px solid rgba(201,169,110,0.2)', color:'var(--text)', fontSize:10, letterSpacing:2, cursor:'pointer', whiteSpace:'nowrap'}}>✕ Cancelar</button>
                   </div>
                 )}
               </div>
@@ -601,15 +628,14 @@ function DJManager({ settings, onSettingsChange }) {
   const [spotifyToast, setSpotifyToast] = useState('');
   const fileRef = useRef();
 
-  // Converte qualquer URL pública do Spotify em URL de embed
   function toEmbedUrl(raw) {
     try {
       const url = new URL(raw.trim().replace(/\\$/, ''));
       if (!url.hostname.includes('spotify.com')) return null;
       const path = url.pathname
-        .replace('/embed', '')          // remover /embed se já tiver
-        .replace(/^\/intl-[a-z-]+/, '') // remover prefixo de locale ex: /intl-pt
-        .replace(/^\//, '');            // remover / inicial
+        .replace('/embed', '')
+        .replace(/^\/intl-[a-z-]+/, '')
+        .replace(/^\//, '');
       return `https://open.spotify.com/embed/${path}?utm_source=generator&theme=0&autoplay=1`;
     } catch { return null; }
   }
@@ -667,17 +693,17 @@ function DJManager({ settings, onSettingsChange }) {
   };
 
   return (
-    <div style={{padding:'36px 40px', overflowY:'auto', flex:1}}>
+    <div className="pg">
       <div style={{marginBottom:32}}>
         <div style={{fontSize:11, letterSpacing:3, color:'var(--gold)', textTransform:'uppercase', marginBottom:6}}>Gestão de Noites</div>
         <div style={{fontFamily:'Playfair Display,serif', fontSize:40}}>DJ & Events</div>
         <div style={{fontSize:15, color:'var(--text)', marginTop:8, fontFamily:'Cormorant Garamond,serif', fontStyle:'italic'}}>Schedule talent and curate the atmospheric soundscape for upcoming nights.</div>
       </div>
 
-      <div style={{display:'grid', gridTemplateColumns:'1fr 320px', gap:24}}>
-        <div style={{background:'var(--dark3)', border:'1px solid var(--border)', padding:'32px'}}>
+      <div className="s2b">
+        <div style={{background:'var(--dark3)', border:'1px solid var(--border)', padding:'28px'}}>
           <div style={{fontFamily:'Playfair Display,serif', fontSize:22, marginBottom:28}}>Schedule New Event</div>
-          <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:20, marginBottom:20}}>
+          <div className="f2">
             <div>
               <label style={{fontSize:9, letterSpacing:3, color:'var(--gold)', textTransform:'uppercase', display:'block', marginBottom:8}}>DJ / Artist Name</label>
               <input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="e.g. Black Coffee"
@@ -696,7 +722,7 @@ function DJManager({ settings, onSettingsChange }) {
           </div>
           <div style={{marginBottom:24}}>
             <label style={{fontSize:9, letterSpacing:3, color:'var(--gold)', textTransform:'uppercase', display:'block', marginBottom:12}}>Promotional Image</label>
-            <div onClick={()=>fileRef.current.click()} style={{border:'1px dashed rgba(201,169,110,0.3)', padding:'32px 24px', textAlign:'center', cursor:'pointer', transition:'border-color 0.3s'}}
+            <div onClick={()=>fileRef.current.click()} style={{border:'1px dashed rgba(201,169,110,0.3)', padding:'28px 20px', textAlign:'center', cursor:'pointer', transition:'border-color 0.3s'}}
               onMouseEnter={e=>e.currentTarget.style.borderColor='var(--gold)'}
               onMouseLeave={e=>e.currentTarget.style.borderColor='rgba(201,169,110,0.3)'}>
               {imgPreview
@@ -764,7 +790,7 @@ function DJManager({ settings, onSettingsChange }) {
                 );
               })()}
               {spotifyToast && <div style={{fontSize:11, color:'var(--green)', marginBottom:6}}>{spotifyToast}</div>}
-              <div style={{display:'flex', gap:8}}>
+              <div style={{display:'flex', gap:8, flexWrap:'wrap'}}>
                 <button onClick={saveSpotify} disabled={saving || !spotifyInput} style={{padding:'6px 16px', background:'var(--gold-dim)', border:'1px solid var(--border)', color:'var(--gold)', fontSize:10, letterSpacing:2, textTransform:'uppercase', cursor:'pointer'}}>
                   {saving ? 'A guardar...' : 'Aplicar no Site'}
                 </button>
@@ -787,28 +813,31 @@ function DJManager({ settings, onSettingsChange }) {
       <div style={{marginTop:40}}>
         <div style={{fontFamily:'Playfair Display,serif', fontSize:28, marginBottom:20}}>Scheduled Talent</div>
         <div style={{background:'var(--dark3)', border:'1px solid var(--border)', overflow:'hidden'}}>
-          <div style={{display:'grid', gridTemplateColumns:'100px 1fr 1fr 1fr 120px', padding:'12px 24px', borderBottom:'1px solid var(--border)'}}>
-            {['Data','DJ / Artist','Género','Status',''].map(h=>(
-              <div key={h} style={{fontSize:9, letterSpacing:2, color:'var(--text)', textTransform:'uppercase'}}>{h}</div>
+          <div className="tbl-wrap">
+            <div className="djt-hd">
+              {['Data','DJ / Artist','Género','Status',''].map(h=>(
+                <div key={h} style={{fontSize:9, letterSpacing:2, color:'var(--text)', textTransform:'uppercase'}}>{h}</div>
+              ))}
+            </div>
+            {djs.map((dj,i)=>(
+              <div key={dj.id} className="djt-row"
+                style={{borderBottom:i<djs.length-1?'1px solid rgba(201,169,110,0.05)':'none'}}
+                onMouseEnter={e=>e.currentTarget.style.background='rgba(201,169,110,0.03)'}
+                onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                <div style={{fontSize:11, letterSpacing:1, color:'var(--gold)', textTransform:'uppercase'}}>{fmtDate(dj.date)}</div>
+                <div style={{fontFamily:'Playfair Display,serif', fontSize:17}}>{dj.name}</div>
+                <div style={{fontSize:12, color:'var(--text)'}}>{dj.genre}</div>
+                <div style={{display:'flex', alignItems:'center', fontSize:12}}>
+                  <span style={{display:'inline-block', width:7, height:7, borderRadius:'50%', background:dj.status==='Published'?'var(--green)':'var(--text)', marginRight:6}}></span>
+                  {dj.status}
+                </div>
+                <div style={{display:'flex', gap:8}}>
+                  {dj.status==='Draft' && <button onClick={()=>publish(dj.id)} style={{padding:'5px 12px', background:'rgba(39,174,96,0.1)', border:'1px solid rgba(39,174,96,0.3)', color:'var(--green)', fontSize:9, letterSpacing:1, cursor:'pointer'}}>Publish</button>}
+                  <button onClick={()=>remove(dj.id)} style={{padding:'5px 12px', background:'transparent', border:'1px solid var(--border)', color:'var(--text)', fontSize:9, letterSpacing:1, cursor:'pointer'}}>✕</button>
+                </div>
+              </div>
             ))}
           </div>
-          {djs.map((dj,i)=>(
-            <div key={dj.id} style={{display:'grid', gridTemplateColumns:'100px 1fr 1fr 1fr 120px', padding:'18px 24px', borderBottom:i<djs.length-1?'1px solid rgba(201,169,110,0.05)':'none', alignItems:'center'}}
-              onMouseEnter={e=>e.currentTarget.style.background='rgba(201,169,110,0.03)'}
-              onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-              <div style={{fontSize:11, letterSpacing:1, color:'var(--gold)', textTransform:'uppercase'}}>{fmtDate(dj.date)}</div>
-              <div style={{fontFamily:'Playfair Display,serif', fontSize:17}}>{dj.name}</div>
-              <div style={{fontSize:12, color:'var(--text)'}}>{dj.genre}</div>
-              <div style={{display:'flex', alignItems:'center', fontSize:12}}>
-                <span style={{display:'inline-block', width:7, height:7, borderRadius:'50%', background:dj.status==='Published'?'var(--green)':'var(--text)', marginRight:6}}></span>
-                {dj.status}
-              </div>
-              <div style={{display:'flex', gap:8}}>
-                {dj.status==='Draft' && <button onClick={()=>publish(dj.id)} style={{padding:'5px 12px', background:'rgba(39,174,96,0.1)', border:'1px solid rgba(39,174,96,0.3)', color:'var(--green)', fontSize:9, letterSpacing:1, cursor:'pointer'}}>Publish</button>}
-                <button onClick={()=>remove(dj.id)} style={{padding:'5px 12px', background:'transparent', border:'1px solid var(--border)', color:'var(--text)', fontSize:9, letterSpacing:1, cursor:'pointer'}}>✕</button>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </div>
@@ -845,7 +874,6 @@ function App() {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
-      {/* Conteúdo principal — ocupa tudo (sidebar é overlay) */}
       <div style={{flex:1, display:'flex', flexDirection:'column', overflow:'hidden', width:'100%'}}>
         <Topbar
           title={screenTitles[screen]}
