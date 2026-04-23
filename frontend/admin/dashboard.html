@@ -747,9 +747,22 @@ function DJManager({ settings, onSettingsChange }) {
                 placeholder="Cole o link do Spotify (artist, playlist, album...)"
                 style={{width:'100%', background:'transparent', border:'1px solid var(--border)', color:'var(--cream)', padding:'8px 10px', fontSize:11, outline:'none', marginBottom:4}}
               />
-              <div style={{fontSize:10, color:'var(--text)', marginBottom:8, opacity:0.7}}>
-                Ex: open.spotify.com/artist/3qm84nBOXUEQ2vnTfUTTFC
-              </div>
+              {(() => {
+                const preview = spotifyInput ? toEmbedUrl(spotifyInput) : null;
+                return preview ? (
+                  <div style={{fontSize:9, color:'var(--green)', marginBottom:6, wordBreak:'break-all', opacity:0.8, letterSpacing:0.5}}>
+                    ✓ {preview}
+                  </div>
+                ) : spotifyInput ? (
+                  <div style={{fontSize:9, color:'var(--red)', marginBottom:6, opacity:0.8}}>
+                    ✗ URL inválida — deve ser um link spotify.com
+                  </div>
+                ) : (
+                  <div style={{fontSize:10, color:'var(--text)', marginBottom:6, opacity:0.7}}>
+                    Ex: open.spotify.com/artist/3qm84nBOXUEQ2vnTfUTTFC
+                  </div>
+                );
+              })()}
               {spotifyToast && <div style={{fontSize:11, color:'var(--green)', marginBottom:6}}>{spotifyToast}</div>}
               <div style={{display:'flex', gap:8}}>
                 <button onClick={saveSpotify} disabled={saving || !spotifyInput} style={{padding:'6px 16px', background:'var(--gold-dim)', border:'1px solid var(--border)', color:'var(--gold)', fontSize:10, letterSpacing:2, textTransform:'uppercase', cursor:'pointer'}}>
