@@ -89,6 +89,16 @@ async function api(method, path, body) {
   return data;
 }
 
+async function apiForm(method, path, formData) {
+  const headers = {};
+  const token = getToken();
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(BASE + path, { method, headers, body: formData });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw Object.assign(new Error(data.message || data.error || 'Erro'), { status: res.status, data });
+  return data;
+}
+
 // ── UTILS ─────────────────────────────────────────────────────
 const statusColor = s => ({
   confirmed: 'var(--green)',
@@ -614,19 +624,28 @@ function Reservations() {
 
 // ── DJ MANAGER ────────────────────────────────────────────────
 function DJManager({ settings, onSettingsChange }) {
-  const [djs, setDjs] = useState([
-    { id:1, name:'Black Coffee', genre:'Deep Afro House', date:'2026-04-25', time:'22:00', status:'Published' },
-    { id:2, name:'Peggy Gou', genre:'Lounge / Tech House', date:'2026-05-02', time:'22:00', status:'Draft' },
-    { id:3, name:'DJ Merlon', genre:'Soulful House', date:'2026-05-09', time:'22:00', status:'Published' },
-  ]);
+  const [djs, setDjs] = useState([]);
   const [form, setForm] = useState({ name:'', genre:'', date:'', time:'22:00' });
+  const [imgFile, setImgFile] = useState(null);
   const [imgPreview, setImgPreview] = useState(null);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loadingDjs, setLoadingDjs] = useState(true);
   const [absenceMsg, setAbsenceMsg] = useState(settings.absence_message || '');
   const [spotifyInput, setSpotifyInput] = useState(settings.spotify_embed_url || '');
   const [spotifyToast, setSpotifyToast] = useState('');
   const fileRef = useRef();
+
+  const loadDjs = useCallback(async () => {
+    setLoadingDjs(true);
+    try {
+      const data = await api('GET', '/api/admin/events');
+      setDjs(data);
+    } catch(e) { console.error(e); }
+    finally { setLoadingDjs(false); }
+  }, []);
+
+  useEffect(() => { loadDjs(); }, [loadDjs]);
 
   function toEmbedUrl(raw) {
     try {
@@ -644,22 +663,49 @@ function DJManager({ settings, onSettingsChange }) {
     const file = e.target.files[0];
     if (!file) return;
     if (file.size > 5*1024*1024) { alert('Máximo 5MB'); return; }
+    setImgFile(file);
     const reader = new FileReader();
     reader.onload = ev => setImgPreview(ev.target.result);
     reader.readAsDataURL(file);
   };
 
-  const schedule = () => {
+  const schedule = async () => {
     if (!form.name || !form.date) return;
-    setDjs(d => [{ id: Date.now(), ...form, status:'Draft', img:imgPreview }, ...d]);
-    setForm({ name:'', genre:'', date:'', time:'22:00' });
-    setImgPreview(null);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    setSaving(true);
+    try {
+      const fd = new FormData();
+      fd.append('dj_name', form.name.trim());
+      fd.append('date', form.date);
+      fd.append('description', form.genre.trim());
+      fd.append('is_active', 'true');
+      if (imgFile) fd.append('image', imgFile);
+      await apiForm('POST', '/api/admin/events', fd);
+      await loadDjs();
+      setForm({ name:'', genre:'', date:'', time:'22:00' });
+      setImgFile(null);
+      setImgPreview(null);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch(e) { alert('Erro ao guardar evento: ' + e.message); }
+    finally { setSaving(false); }
   };
 
-  const publish = id => setDjs(d => d.map(dj => dj.id===id ? {...dj, status:'Published'} : dj));
-  const remove = id => setDjs(d => d.filter(dj => dj.id!==id));
+  const publish = async (id, active) => {
+    try {
+      const fd = new FormData();
+      fd.append('is_active', active ? 'true' : 'false');
+      await apiForm('PUT', `/api/admin/events/${id}`, fd);
+      await loadDjs();
+    } catch(e) { console.error(e); }
+  };
+
+  const remove = async id => {
+    if (!confirm('Remover este evento?')) return;
+    try {
+      await api('DELETE', `/api/admin/events/${id}`);
+      await loadDjs();
+    } catch(e) { console.error(e); }
+  };
 
   const toggleClose = async () => {
     const newVal = !settings.booking_closed;
@@ -813,31 +859,40 @@ function DJManager({ settings, onSettingsChange }) {
       <div style={{marginTop:40}}>
         <div style={{fontFamily:'Playfair Display,serif', fontSize:28, marginBottom:20}}>Scheduled Talent</div>
         <div style={{background:'var(--dark3)', border:'1px solid var(--border)', overflow:'hidden'}}>
-          <div className="tbl-wrap">
-            <div className="djt-hd">
-              {['Data','DJ / Artist','Género','Status',''].map(h=>(
-                <div key={h} style={{fontSize:9, letterSpacing:2, color:'var(--text)', textTransform:'uppercase'}}>{h}</div>
+          {loadingDjs ? (
+            <div style={{padding:'40px', display:'flex', justifyContent:'center'}}><Spinner size={20} color="var(--gold)"/></div>
+          ) : djs.length === 0 ? (
+            <div style={{padding:'40px', textAlign:'center', color:'var(--text)', fontSize:12, letterSpacing:2}}>Nenhum evento agendado</div>
+          ) : (
+            <div className="tbl-wrap">
+              <div className="djt-hd">
+                {['Data','DJ / Artist','Descrição','Visível',''].map(h=>(
+                  <div key={h} style={{fontSize:9, letterSpacing:2, color:'var(--text)', textTransform:'uppercase'}}>{h}</div>
+                ))}
+              </div>
+              {djs.map((dj,i)=>(
+                <div key={dj.id} className="djt-row"
+                  style={{borderBottom:i<djs.length-1?'1px solid rgba(201,169,110,0.05)':'none'}}
+                  onMouseEnter={e=>e.currentTarget.style.background='rgba(201,169,110,0.03)'}
+                  onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                  <div style={{fontSize:11, letterSpacing:1, color:'var(--gold)', textTransform:'uppercase'}}>{fmtDate(dj.date)}</div>
+                  <div style={{display:'flex', alignItems:'center', gap:10}}>
+                    {dj.image_url && <img src={dj.image_url} style={{width:32, height:32, objectFit:'cover', borderRadius:2, flexShrink:0}} alt=""/>}
+                    <span style={{fontFamily:'Playfair Display,serif', fontSize:17}}>{dj.dj_name}</span>
+                  </div>
+                  <div style={{fontSize:12, color:'var(--text)'}}>{dj.description}</div>
+                  <div style={{display:'flex', alignItems:'center', fontSize:12}}>
+                    <span style={{display:'inline-block', width:7, height:7, borderRadius:'50%', background:dj.is_active?'var(--green)':'var(--text)', marginRight:6}}></span>
+                    {dj.is_active ? 'Publicado' : 'Rascunho'}
+                  </div>
+                  <div style={{display:'flex', gap:8}}>
+                    <button onClick={()=>publish(dj.id, !dj.is_active)} style={{padding:'5px 12px', background:dj.is_active?'rgba(192,57,43,0.1)':'rgba(39,174,96,0.1)', border:`1px solid ${dj.is_active?'rgba(192,57,43,0.3)':'rgba(39,174,96,0.3)'}`, color:dj.is_active?'var(--red)':'var(--green)', fontSize:9, letterSpacing:1, cursor:'pointer'}}>{dj.is_active ? 'Ocultar' : 'Publicar'}</button>
+                    <button onClick={()=>remove(dj.id)} style={{padding:'5px 12px', background:'transparent', border:'1px solid var(--border)', color:'var(--text)', fontSize:9, letterSpacing:1, cursor:'pointer'}}>✕</button>
+                  </div>
+                </div>
               ))}
             </div>
-            {djs.map((dj,i)=>(
-              <div key={dj.id} className="djt-row"
-                style={{borderBottom:i<djs.length-1?'1px solid rgba(201,169,110,0.05)':'none'}}
-                onMouseEnter={e=>e.currentTarget.style.background='rgba(201,169,110,0.03)'}
-                onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
-                <div style={{fontSize:11, letterSpacing:1, color:'var(--gold)', textTransform:'uppercase'}}>{fmtDate(dj.date)}</div>
-                <div style={{fontFamily:'Playfair Display,serif', fontSize:17}}>{dj.name}</div>
-                <div style={{fontSize:12, color:'var(--text)'}}>{dj.genre}</div>
-                <div style={{display:'flex', alignItems:'center', fontSize:12}}>
-                  <span style={{display:'inline-block', width:7, height:7, borderRadius:'50%', background:dj.status==='Published'?'var(--green)':'var(--text)', marginRight:6}}></span>
-                  {dj.status}
-                </div>
-                <div style={{display:'flex', gap:8}}>
-                  {dj.status==='Draft' && <button onClick={()=>publish(dj.id)} style={{padding:'5px 12px', background:'rgba(39,174,96,0.1)', border:'1px solid rgba(39,174,96,0.3)', color:'var(--green)', fontSize:9, letterSpacing:1, cursor:'pointer'}}>Publish</button>}
-                  <button onClick={()=>remove(dj.id)} style={{padding:'5px 12px', background:'transparent', border:'1px solid var(--border)', color:'var(--text)', fontSize:9, letterSpacing:1, cursor:'pointer'}}>✕</button>
-                </div>
-              </div>
-            ))}
-          </div>
+          )}
         </div>
       </div>
     </div>

@@ -372,6 +372,9 @@ nav.scrolled { -webkit-backdrop-filter:blur(20px); }
     </p>
   </div>
 
+  <!-- DJ Events Grid (dinâmico — preenchido via API) -->
+  <div id="djEventsGrid" style="display:none;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px;max-width:960px;margin:0 auto 56px;padding:0 16px"></div>
+
   <!-- Spotify Embed -->
   <div class="max-w-2xl mx-auto py-8 reveal">
     <div class="font-syne text-[10px] tracking-[4px] uppercase text-muted mb-4 text-center">Now Streaming</div>
@@ -534,6 +537,33 @@ nav.scrolled { -webkit-backdrop-filter:blur(20px); }
     .then(r => r.json())
     .then(d => setSpotifySrc(d.spotify_embed_url))
     .catch(() => setSpotifySrc(FALLBACK_SPOTIFY));
+
+  // Carregar DJs activos da API
+  fetch('/api/events/active')
+    .then(r => r.json())
+    .then(events => {
+      if (!events || !events.length) return;
+      const grid = document.getElementById('djEventsGrid');
+      grid.style.display = 'grid';
+      grid.innerHTML = events.map(e => {
+        const d = new Date(e.date + 'T12:00:00');
+        const dateStr = d.toLocaleDateString('pt-PT', { weekday:'long', day:'numeric', month:'long' });
+        return `
+          <div style="background:#111;border:1px solid rgba(201,169,110,0.12);overflow:hidden;transition:border-color .3s"
+               onmouseenter="this.style.borderColor='rgba(201,169,110,0.4)'"
+               onmouseleave="this.style.borderColor='rgba(201,169,110,0.12)'">
+            ${e.image_url
+              ? `<div style="height:220px;overflow:hidden"><img src="${e.image_url}" alt="${e.dj_name}" style="width:100%;height:100%;object-fit:cover;opacity:.85;transition:transform .6s" onmouseenter="this.style.transform='scale(1.04)'" onmouseleave="this.style.transform='scale(1)'"></div>`
+              : `<div style="height:80px;background:linear-gradient(135deg,#181818,#111);display:flex;align-items:center;justify-content:center;font-size:32px;color:rgba(201,169,110,0.3)">◉</div>`}
+            <div style="padding:24px">
+              <div style="font-family:'Syne',sans-serif;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#C9A96E;margin-bottom:8px">${dateStr}</div>
+              <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:400;color:#E8E0D0;margin-bottom:8px">${e.dj_name}</div>
+              ${e.description ? `<div style="font-size:13px;color:#8A8276;line-height:1.5">${e.description}</div>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    })
+    .catch(() => {});
 
   // Mostrar Spotify bar após scroll
   let spotifyShown = false;
