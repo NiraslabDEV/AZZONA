@@ -610,7 +610,7 @@ function DJManager({ settings, onSettingsChange }) {
         .replace('/embed', '')          // remover /embed se já tiver
         .replace(/^\/intl-[a-z-]+/, '') // remover prefixo de locale ex: /intl-pt
         .replace(/^\//, '');            // remover / inicial
-      return `https://open.spotify.com/embed/${path}?utm_source=generator&theme=0`;
+      return `https://open.spotify.com/embed/${path}?utm_source=generator&theme=0&autoplay=1`;
     } catch { return null; }
   }
 
