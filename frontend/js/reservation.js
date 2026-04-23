@@ -1,10 +1,10 @@
 // ── Reservation form ──────────────────────────────────────────
-const form     = document.getElementById('reservationForm');
-const success  = document.getElementById('formSuccess');
-const errors   = document.getElementById('formErrors');
+const form      = document.getElementById('reservationForm');
+const success   = document.getElementById('formSuccess');
+const errors    = document.getElementById('formErrors');
 const submitBtn = document.getElementById('submitBtn');
 const submitText = document.getElementById('submitText');
-const spinner  = document.getElementById('submitSpinner');
+const spinner   = document.getElementById('submitSpinner');
 
 // Set minimum date to today
 const dateInput = form.querySelector('[name="date"]');
@@ -32,6 +32,24 @@ function setLoading(loading) {
   submitBtn.classList.toggle('opacity-70', loading);
 }
 
+// Check if bookings are closed and show a notice
+async function checkBookingStatus() {
+  try {
+    const res = await fetch('/api/reservations/booking-status');
+    const { booking_closed, absence_message } = await res.json();
+    if (booking_closed) {
+      const msg = absence_message || 'Reservas temporariamente indisponíveis.';
+      form.querySelectorAll('input, select, textarea').forEach(el => el.disabled = true);
+      submitBtn.disabled = true;
+      showErrors([`🔒 ${msg}`]);
+    }
+  } catch (_) {
+    // Silent — don't block form if check fails
+  }
+}
+
+checkBookingStatus();
+
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   clearErrors();
@@ -49,7 +67,8 @@ form.addEventListener('submit', async (e) => {
     const json = await res.json();
 
     if (!res.ok) {
-      showErrors(json.errors || [json.error || 'Erro ao enviar reserva.']);
+      const msgs = json.errors || [json.message || json.error || 'Erro ao enviar reserva.'];
+      showErrors(msgs);
       return;
     }
 
@@ -67,4 +86,5 @@ window.resetForm = function () {
   form.classList.remove('hidden');
   success.classList.add('hidden');
   clearErrors();
+  checkBookingStatus();
 };

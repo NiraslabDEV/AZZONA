@@ -1,6 +1,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { v4: uuidv4 } = require('uuid');
+const { reservations, settings } = require('../data/store');
 const router = express.Router();
 
 const limiter = rateLimit({
@@ -8,9 +9,6 @@ const limiter = rateLimit({
   max: 10,
   message: { error: 'Demasiados pedidos. Tente novamente em 15 minutos.' },
 });
-
-// In-memory store until PostgreSQL (Sprint 2)
-const reservations = [];
 
 function validateReservation(body) {
   const { customer_name, customer_email, customer_phone, date, time, guests } = body;
@@ -26,7 +24,22 @@ function validateReservation(body) {
   return errors;
 }
 
+// GET /api/settings/booking-status (public)
+router.get('/booking-status', (req, res) => {
+  res.json({
+    booking_closed: settings.booking_closed,
+    absence_message: settings.absence_message,
+  });
+});
+
 router.post('/', limiter, (req, res) => {
+  if (settings.booking_closed) {
+    return res.status(409).json({
+      error: 'Reservas fechadas.',
+      message: settings.absence_message || 'Não estamos a aceitar reservas de momento.',
+    });
+  }
+
   const errors = validateReservation(req.body);
   if (errors.length) return res.status(400).json({ errors });
 
@@ -44,7 +57,7 @@ router.post('/', limiter, (req, res) => {
   };
 
   reservations.push(reservation);
-  console.log('Nova reserva:', reservation);
+  console.log('Nova reserva:', reservation.customer_name, reservation.date, reservation.time);
 
   res.status(201).json({
     message: 'Reserva recebida! Entraremos em contacto para confirmar.',

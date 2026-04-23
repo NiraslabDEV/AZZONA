@@ -6,6 +6,7 @@ const path = require('path');
 
 const dishesRouter = require('./routes/dishes');
 const reservationsRouter = require('./routes/reservations');
+const adminRouter = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,8 +23,9 @@ app.use('/img', express.static(path.join(__dirname, '../../img')));
 // API
 app.use('/api/dishes', dishesRouter);
 app.use('/api/reservations', reservationsRouter);
+app.use('/api/admin', adminRouter);
 
-// SPA fallback
+// SPA fallback — send index.html for non-API routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../../frontend/index.html'));
 });
