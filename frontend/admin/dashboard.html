@@ -210,6 +210,7 @@ const NAV = [
   { id:'dashboard', label:'Dashboard', icon:'⊞' },
   { id:'reservations', label:'Reservas', icon:'◫' },
   { id:'djs', label:'DJ & Events', icon:'◉' },
+  { id:'menu', label:'Cardápio', icon:'◈' },
 ];
 
 function Sidebar({ active, setActive, onLogout, haltDay, isOpen, onClose }) {
@@ -899,6 +900,225 @@ function DJManager({ settings, onSettingsChange }) {
   );
 }
 
+// ── MENU MANAGER ─────────────────────────────────────────────
+const CATEGORIES = ['Grelhados','Mariscos','Internacional','Comfort Food','Breakfood','Cocktails','Outros'];
+
+function MenuManager() {
+  const [dishes, setDishes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [catFilter, setCatFilter] = useState('all');
+  const [toast, setToast] = useState('');
+  const [editing, setEditing] = useState(null); // dish being edited
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ name:'', description:'', price:'', category:'Grelhados', image_url:'' });
+  const [saving, setSaving] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try { setDishes(await api('GET', '/api/admin/dishes')); }
+    catch(e) { console.error(e); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const showToast = (msg, err=false) => {
+    setToast({ msg, err });
+    setTimeout(() => setToast(''), 3000);
+  };
+
+  const openNew = () => {
+    setEditing(null);
+    setForm({ name:'', description:'', price:'', category:'Grelhados', image_url:'' });
+    setShowForm(true);
+  };
+
+  const openEdit = dish => {
+    setEditing(dish.id);
+    setForm({ name: dish.name, description: dish.description, price: String(dish.price), category: dish.category, image_url: dish.image_url || '' });
+    setShowForm(true);
+  };
+
+  const save = async () => {
+    if (!form.name || !form.price || !form.category) return;
+    setSaving(true);
+    try {
+      const body = { name: form.name, description: form.description, price: parseFloat(form.price), category: form.category, image_url: form.image_url };
+      if (editing) {
+        await api('PUT', `/api/admin/dishes/${editing}`, body);
+        showToast('Prato actualizado');
+      } else {
+        await api('POST', '/api/admin/dishes', body);
+        showToast('Prato adicionado');
+      }
+      setShowForm(false);
+      await load();
+    } catch(e) { showToast('Erro: ' + e.message, true); }
+    finally { setSaving(false); }
+  };
+
+  const toggle = async dish => {
+    try {
+      await api('PUT', `/api/admin/dishes/${dish.id}`, { available: !dish.available });
+      await load();
+    } catch(e) { showToast('Erro', true); }
+  };
+
+  const remove = async id => {
+    if (!confirm('Remover este prato do cardápio?')) return;
+    try {
+      await api('DELETE', `/api/admin/dishes/${id}`);
+      showToast('Prato removido');
+      await load();
+    } catch(e) { showToast('Erro', true); }
+  };
+
+  const inpStyle = { width:'100%', background:'transparent', border:'none', borderBottom:'1px solid var(--border)', padding:'8px 0', color:'var(--cream)', fontSize:13, outline:'none' };
+  const selStyle = { width:'100%', background:'var(--dark3)', border:'1px solid var(--border)', padding:'8px', color:'var(--cream)', fontSize:13, outline:'none' };
+  const lblStyle = { fontSize:9, letterSpacing:3, color:'var(--gold)', textTransform:'uppercase', display:'block', marginBottom:6 };
+
+  const filtered = catFilter === 'all' ? dishes : dishes.filter(d => d.category === catFilter);
+  const cats = ['all', ...CATEGORIES.filter(c => dishes.some(d => d.category === c))];
+
+  return (
+    <div className="pg">
+      {toast && (
+        <div style={{position:'fixed', top:20, right:20, zIndex:999, padding:'12px 20px', background:toast.err?'rgba(192,57,43,0.9)':'rgba(39,174,96,0.9)', border:`1px solid ${toast.err?'var(--red)':'var(--green)'}`, fontSize:12, color:'white', backdropFilter:'blur(8px)'}}>
+          {toast.err ? '✕' : '✓'} {toast.msg}
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="pg-hd">
+        <div>
+          <div style={{fontSize:11, letterSpacing:3, color:'var(--gold)', textTransform:'uppercase', marginBottom:6}}>Gestão de Pratos</div>
+          <div style={{fontFamily:'Playfair Display,serif', fontSize:40}}>Cardápio</div>
+          <div style={{fontSize:14, color:'var(--text)', marginTop:6}}>{dishes.length} pratos · {dishes.filter(d=>d.available).length} disponíveis</div>
+        </div>
+        <div style={{marginTop:8}}>
+          <button onClick={openNew} style={{padding:'12px 28px', background:'var(--gold)', border:'none', color:'var(--dark)', fontSize:11, letterSpacing:3, textTransform:'uppercase', cursor:'pointer', fontWeight:700}}>
+            + Novo Prato
+          </button>
+        </div>
+      </div>
+
+      {/* Form (add/edit) */}
+      {showForm && (
+        <div style={{marginBottom:28, padding:'28px', background:'var(--dark3)', border:'1px solid rgba(201,169,110,0.3)'}}>
+          <div style={{fontFamily:'Playfair Display,serif', fontSize:20, marginBottom:20}}>{editing ? 'Editar Prato' : 'Adicionar Prato'}</div>
+          <div className="f2">
+            <div>
+              <label style={lblStyle}>Nome do Prato *</label>
+              <input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="Ex: Filé Grelhado Premium" style={inpStyle}/>
+            </div>
+            <div>
+              <label style={lblStyle}>Preço (MT) *</label>
+              <input type="number" value={form.price} onChange={e=>setForm(f=>({...f,price:e.target.value}))} placeholder="1200" style={inpStyle}/>
+            </div>
+          </div>
+          <div style={{marginBottom:16}}>
+            <label style={lblStyle}>Descrição</label>
+            <input value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} placeholder="Breve descrição do prato..." style={inpStyle}/>
+          </div>
+          <div className="f2" style={{marginBottom:16}}>
+            <div>
+              <label style={lblStyle}>Categoria *</label>
+              <select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value}))} style={selStyle}>
+                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={lblStyle}>URL da Imagem</label>
+              <input value={form.image_url} onChange={e=>setForm(f=>({...f,image_url:e.target.value}))} placeholder="/img/foto.jpg" style={inpStyle}/>
+            </div>
+          </div>
+          {form.image_url && (
+            <div style={{marginBottom:16}}>
+              <img src={form.image_url} alt="preview" style={{height:80, objectFit:'cover', borderRadius:2, opacity:.8}} onError={e=>e.target.style.display='none'}/>
+            </div>
+          )}
+          <div style={{display:'flex', gap:12}}>
+            <button onClick={save} disabled={saving} style={{padding:'10px 28px', background:'var(--gold)', border:'none', color:'var(--dark)', fontSize:11, letterSpacing:2, textTransform:'uppercase', cursor:'pointer', fontWeight:700}}>
+              {saving ? 'A guardar...' : (editing ? 'Guardar Alterações' : 'Adicionar ao Cardápio')}
+            </button>
+            <button onClick={()=>setShowForm(false)} style={{padding:'10px 20px', background:'transparent', border:'1px solid var(--border)', color:'var(--text)', fontSize:11, letterSpacing:2, textTransform:'uppercase', cursor:'pointer'}}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Category filter */}
+      <div style={{display:'flex', gap:0, marginBottom:20, overflowX:'auto'}}>
+        {cats.map((c,i)=>(
+          <button key={c} onClick={()=>setCatFilter(c)} style={{
+            padding:'8px 16px', background:'transparent', border:'1px solid var(--border)',
+            borderLeft: i>0?'none':'1px solid var(--border)',
+            color: catFilter===c?'var(--gold)':'var(--text)',
+            fontSize:10, letterSpacing:2, textTransform:'uppercase', cursor:'pointer',
+            whiteSpace:'nowrap', flexShrink:0, position:'relative',
+          }}>
+            {c === 'all' ? 'Todos' : c}
+            {catFilter===c && <div style={{position:'absolute', bottom:0, left:0, right:0, height:2, background:'var(--gold)'}}></div>}
+          </button>
+        ))}
+      </div>
+
+      {/* Dishes list */}
+      {loading ? (
+        <div style={{padding:'60px', display:'flex', justifyContent:'center', border:'1px solid var(--border)'}}><Spinner size={24} color="var(--gold)"/></div>
+      ) : filtered.length === 0 ? (
+        <div style={{padding:'60px', textAlign:'center', color:'var(--text)', fontSize:12, letterSpacing:2, border:'1px solid var(--border)'}}>Nenhum prato nesta categoria</div>
+      ) : (
+        <div style={{background:'var(--dark3)', border:'1px solid var(--border)'}}>
+          {/* Table header */}
+          <div style={{display:'grid', gridTemplateColumns:'56px 1fr 1fr 100px 80px 130px', padding:'10px 20px', borderBottom:'1px solid var(--border)', gap:12}}>
+            {['','Nome','Categoria','Preço','Estado',''].map((h,i)=>(
+              <div key={i} style={{fontSize:9, letterSpacing:2, color:'var(--text)', textTransform:'uppercase'}}>{h}</div>
+            ))}
+          </div>
+          <div className="tbl-wrap">
+            {filtered.map((dish, i) => (
+              <div key={dish.id}
+                style={{display:'grid', gridTemplateColumns:'56px 1fr 1fr 100px 80px 130px', padding:'14px 20px', gap:12, alignItems:'center', borderBottom: i<filtered.length-1?'1px solid rgba(201,169,110,0.06)':'none', minWidth:560, transition:'background .2s'}}
+                onMouseEnter={e=>e.currentTarget.style.background='rgba(201,169,110,0.03)'}
+                onMouseLeave={e=>e.currentTarget.style.background='transparent'}>
+                {/* Thumbnail */}
+                <div style={{width:48, height:48, overflow:'hidden', flexShrink:0}}>
+                  {dish.image_url
+                    ? <img src={dish.image_url} alt={dish.name} style={{width:'100%', height:'100%', objectFit:'cover', opacity: dish.available ? .85 : .3}}/>
+                    : <div style={{width:'100%', height:'100%', background:'rgba(201,169,110,0.08)', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--border)', fontSize:18}}>◈</div>
+                  }
+                </div>
+                {/* Name + description */}
+                <div style={{minWidth:0}}>
+                  <div style={{fontSize:14, color: dish.available?'var(--cream)':'var(--text)', fontFamily:'Playfair Display,serif', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{dish.name}</div>
+                  {dish.description && <div style={{fontSize:11, color:'var(--text)', marginTop:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{dish.description}</div>}
+                </div>
+                {/* Category */}
+                <div style={{fontSize:11, color:'var(--text)'}}>{dish.category}</div>
+                {/* Price */}
+                <div style={{fontSize:14, color:'var(--gold)', fontWeight:600}}>{dish.price.toLocaleString('pt-PT')} MT</div>
+                {/* Status toggle */}
+                <div>
+                  <div onClick={()=>toggle(dish)} style={{width:36, height:20, background:dish.available?'var(--green)':'rgba(255,255,255,0.08)', borderRadius:10, position:'relative', cursor:'pointer', transition:'background .3s'}}>
+                    <div style={{width:14, height:14, background:'white', borderRadius:'50%', position:'absolute', top:3, left:dish.available?19:3, transition:'left .3s'}}></div>
+                  </div>
+                </div>
+                {/* Actions */}
+                <div style={{display:'flex', gap:6}}>
+                  <button onClick={()=>openEdit(dish)} style={{padding:'5px 10px', background:'var(--gold-dim)', border:'1px solid var(--border)', color:'var(--gold)', fontSize:9, letterSpacing:1, cursor:'pointer'}}>Editar</button>
+                  <button onClick={()=>remove(dish.id)} style={{padding:'5px 8px', background:'transparent', border:'1px solid var(--border)', color:'var(--text)', fontSize:9, cursor:'pointer'}}>✕</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── APP ───────────────────────────────────────────────────────
 function App() {
   const [authed, setAuthed] = useState(() => !!sessionStorage.getItem('azzona_token'));
@@ -915,7 +1135,7 @@ function App() {
   const login = () => setAuthed(true);
   const logout = () => { clearToken(); setAuthed(false); };
 
-  const screenTitles = { dashboard:'Management Portal', reservations:'Reservas', djs:'DJ & Events' };
+  const screenTitles = { dashboard:'Management Portal', reservations:'Reservas', djs:'DJ & Events', menu:'Cardápio' };
 
   if (!authed) return <Login onLogin={login}/>;
 
@@ -939,6 +1159,7 @@ function App() {
           {screen==='dashboard' && <Dashboard settings={settings} onSettingsChange={setSettings}/>}
           {screen==='reservations' && <Reservations/>}
           {screen==='djs' && <DJManager settings={settings} onSettingsChange={setSettings}/>}
+          {screen==='menu' && <MenuManager/>}
         </div>
       </div>
     </div>

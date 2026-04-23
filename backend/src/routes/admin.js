@@ -3,9 +3,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
 const { v4: uuidv4 } = require('uuid');
-const { reservations, settings } = require('../data/store');
+const { reservations, settings, dishes } = require('../data/store');
 const auth = require('../middleware/auth');
 const { uploadImage } = require('../middleware/upload');
+const { confirmCustomer } = require('../services/email');
 
 // In-memory events store (DJ events)
 const events = [];
@@ -81,6 +82,12 @@ router.put('/reservations/:id', auth, (req, res) => {
   const idx = reservations.findIndex(r => r.id === id);
   if (idx === -1) return res.status(404).json({ error: 'Reserva não encontrada.' });
   reservations[idx] = { ...reservations[idx], status, updated_at: new Date().toISOString() };
+
+  // Enviar email de confirmação ao cliente quando confirmada
+  if (status === 'confirmed') {
+    confirmCustomer(reservations[idx]).catch(err => console.error('Email erro (cliente):', err.message));
+  }
+
   res.json(reservations[idx]);
 });
 
@@ -171,6 +178,59 @@ router.delete('/events/:id', auth, (req, res) => {
 // GET /api/events/active — público, retorna eventos activos para o site
 router.get('/events/active-public', (req, res) => {
   res.json(events.filter(e => e.is_active).sort((a, b) => a.date.localeCompare(b.date)));
+});
+
+// ── Cardápio (Dishes) ─────────────────────────────────────────
+
+// GET /api/admin/dishes — todos os pratos (incl. indisponíveis)
+router.get('/dishes', auth, (req, res) => {
+  res.json([...dishes]);
+});
+
+// POST /api/admin/dishes — adicionar prato
+router.post('/dishes', auth, (req, res) => {
+  const { name, description, price, category, image_url } = req.body;
+  if (!name || !price || !category) {
+    return res.status(400).json({ error: 'name, price e category são obrigatórios.' });
+  }
+  const dish = {
+    id: uuidv4(),
+    name: name.trim(),
+    description: description?.trim() || '',
+    price: parseFloat(price),
+    category: category.trim(),
+    image_url: image_url?.trim() || '',
+    available: true,
+    created_at: new Date().toISOString(),
+  };
+  dishes.push(dish);
+  res.status(201).json(dish);
+});
+
+// PUT /api/admin/dishes/:id — editar prato
+router.put('/dishes/:id', auth, (req, res) => {
+  const idx = dishes.findIndex(d => d.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Prato não encontrado.' });
+  const { name, description, price, category, image_url, available } = req.body;
+  dishes[idx] = {
+    ...dishes[idx],
+    ...(name       !== undefined && { name: name.trim() }),
+    ...(description !== undefined && { description: description.trim() }),
+    ...(price      !== undefined && { price: parseFloat(price) }),
+    ...(category   !== undefined && { category: category.trim() }),
+    ...(image_url  !== undefined && { image_url: image_url.trim() }),
+    ...(available  !== undefined && { available: Boolean(available) }),
+    updated_at: new Date().toISOString(),
+  };
+  res.json(dishes[idx]);
+});
+
+// DELETE /api/admin/dishes/:id — remover prato
+router.delete('/dishes/:id', auth, (req, res) => {
+  const idx = dishes.findIndex(d => d.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Prato não encontrado.' });
+  dishes.splice(idx, 1);
+  res.status(204).end();
 });
 
 module.exports = router;

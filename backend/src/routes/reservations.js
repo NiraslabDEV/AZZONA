@@ -2,6 +2,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { v4: uuidv4 } = require('uuid');
 const { reservations, settings } = require('../data/store');
+const { notifyOwner } = require('../services/email');
 const router = express.Router();
 
 const limiter = rateLimit({
@@ -82,6 +83,9 @@ router.post('/', limiter, (req, res) => {
 
   reservations.push(reservation);
   console.log('Nova reserva:', reservation.customer_name, reservation.date, reservation.time);
+
+  // Notificar dono (fire-and-forget — não bloqueia a resposta)
+  notifyOwner(reservation).catch(err => console.error('Email erro (owner):', err.message));
 
   res.status(201).json({
     message: 'Reserva recebida! Entraremos em contacto para confirmar.',

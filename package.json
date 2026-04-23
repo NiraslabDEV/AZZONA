@@ -2,11 +2,16 @@
   "name": "azzona",
   "version": "1.0.0",
   "private": true,
-  "workspaces": ["backend"],
+  "workspaces": [
+    "backend"
+  ],
   "scripts": {
     "start": "node backend/src/app.js"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "nodemailer": "^8.0.5"
   }
 }
