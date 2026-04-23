@@ -783,7 +783,7 @@ function DJManager({ settings, onSettingsChange }) {
       </div>
 
       <div className="s2b">
-        <div style={{background:'var(--dark3)', border:'1px solid var(--border)', padding:'28px'}}>
+        <form onSubmit={e=>{e.preventDefault();schedule();}} style={{background:'var(--dark3)', border:'1px solid var(--border)', padding:'28px'}}>
           <div style={{fontFamily:'Playfair Display,serif', fontSize:22, marginBottom:28}}>Schedule New Event</div>
           <div className="f2">
             <div>
@@ -817,12 +817,12 @@ function DJManager({ settings, onSettingsChange }) {
             <input ref={fileRef} type="file" accept="image/png,image/jpeg" onChange={handleFile} style={{display:'none'}}/>
           </div>
           {saved && <div style={{marginBottom:16, padding:'10px 14px', background:'rgba(39,174,96,0.1)', border:'1px solid rgba(39,174,96,0.3)', fontSize:12, color:'var(--green)', letterSpacing:1}}>✓ DJ agendado</div>}
-          <button onClick={schedule} style={{padding:'14px 36px', background:'transparent', border:'1px solid var(--gold)', color:'var(--gold)', fontSize:11, letterSpacing:3, textTransform:'uppercase', cursor:'pointer', transition:'all 0.3s'}}
-            onMouseEnter={e=>{e.target.style.background='var(--gold)';e.target.style.color='var(--dark)'}}
-            onMouseLeave={e=>{e.target.style.background='transparent';e.target.style.color='var(--gold)'}}>
-            Schedule Event
+          <button type="submit" disabled={saving} style={{padding:'14px 36px', background:'transparent', border:'1px solid var(--gold)', color:'var(--gold)', fontSize:11, letterSpacing:3, textTransform:'uppercase', cursor:saving?'wait':'pointer', transition:'all 0.3s', display:'flex', alignItems:'center', gap:10}}
+            onMouseEnter={e=>{e.currentTarget.style.background='var(--gold)';e.currentTarget.style.color='var(--dark)'}}
+            onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color='var(--gold)'}}>
+            {saving ? <><Spinner color="var(--gold)"/> A guardar...</> : 'Schedule Event'}
           </button>
-        </div>
+        </form>
 
         <div>
           <div style={{background:'var(--dark3)', border:'1px solid var(--border)', padding:'20px', marginBottom:16}}>
