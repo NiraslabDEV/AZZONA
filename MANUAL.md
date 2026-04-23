@@ -1,5 +1,5 @@
 # AZZONA — Manual do Sistema
-**Versão 2.0 · Abril 2026**
+**Versão 2.1 · Abril 2026**
 
 ---
 
@@ -409,8 +409,8 @@ As imagens de DJ são validadas por **magic bytes** — o sistema lê os bytes i
 
 ### Dados dos clientes
 
-- Dados de reservas (nome, telefone, e-mail) guardados em memória durante a sessão
-- Em produção: migração para PostgreSQL com encriptação em repouso
+- Dados de reservas (nome, telefone, e-mail) guardados em **PostgreSQL** com persistência total
+- Os dados sobrevivem a reinicios, deploys e actualizações do servidor
 - O endpoint público de lookup por telefone devolve apenas nome e número de visitas — nunca e-mail ou outros dados sensíveis
 
 ---
@@ -439,7 +439,7 @@ As imagens de DJ são validadas por **magic bytes** — o sistema lê os bytes i
 | Autenticação | JWT + bcrypt |
 | Emails | Nodemailer (SMTP) |
 | Upload de imagens | Multer + validação magic bytes |
-| Base de dados (Sprint 2) | PostgreSQL |
+| Base de dados | PostgreSQL (Railway Postgres) |
 | Deploy | Railway (CI/CD via GitHub Actions) |
 | Testes automatizados | Jest + Supertest — 25 testes |
 
@@ -464,9 +464,26 @@ EMAIL_PASS=senha_de_aplicacao
 EMAIL_FROM=Azzona Reservas <reservas@azzona.co.mz>
 OWNER_EMAIL=gestao@azzona.co.mz
 
-# Base de dados (Sprint 2)
+# Base de dados (configurada no Railway)
 DATABASE_URL=postgresql://user:pass@host:5432/azzona
 ```
+
+### Base de Dados PostgreSQL
+
+Toda a informação do sistema é guardada numa base de dados PostgreSQL alojada no Railway. As tabelas são criadas automaticamente na primeira vez que o servidor arranca — não é necessária nenhuma configuração manual.
+
+| Tabela | O que guarda |
+|--------|-------------|
+| `reservations` | Todas as reservas (nome, contacto, data, hora, estado) |
+| `dishes` | Menu completo com preços, categorias e disponibilidade |
+| `events` | Eventos DJ (nome, data, foto, estado publicado/oculto) |
+| `settings` | Configurações globais (reservas abertas, mensagem, Spotify) |
+
+**Persistência garantida:** os dados sobrevivem a todos os deploys, reinicios e actualizações do servidor. Nenhuma informação se perde.
+
+**Migrações automáticas:** o servidor aplica o esquema da base de dados (`CREATE TABLE IF NOT EXISTS`) sempre que arranca — actualizações são seguras e não apagam dados existentes.
+
+---
 
 ### Endpoints da API
 
