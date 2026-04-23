@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Azzona Delivery — Maputo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        gold: '#C9A96E',
+        'gold-light': '#E2C992',
+        dark:  '#0A0A0A',
+        dark2: '#111111',
+        dark3: '#1A1A1A',
+        cream: '#F5F0E8',
+        muted: '#B8B0A0',
+      },
+      fontFamily: {
+        playfair:  ['"Playfair Display"', 'serif'],
+        cormorant: ['"Cormorant Garamond"', 'serif'],
+        syne:      ['Syne', 'sans-serif'],
+      },
+    }
+  }
+}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { -webkit-font-smoothing: antialiased; }
+
+/* ── Skeleton ── */
+@keyframes shimmer { to { background-position: 200% 0; } }
+.skeleton { background: linear-gradient(90deg,#1A1A1A 25%,#252525 50%,#1A1A1A 75%); background-size: 200%; animation: shimmer 1.4s infinite; border-radius: 4px; }
+
+/* ── Filter tabs ── */
+.cat-tab { border: 1px solid rgba(201,169,110,.2); color: #B8B0A0; transition: all .25s; white-space: nowrap; }
+.cat-tab:hover { border-color: rgba(201,169,110,.5); color: #C9A96E; }
+.cat-tab.active { background: #C9A96E; border-color: #C9A96E; color: #0A0A0A; font-weight: 600; }
+
+/* ── Dish card ── */
+.dish-card { background: #1A1A1A; transition: transform .4s cubic-bezier(.16,1,.3,1), box-shadow .4s; }
+.dish-card:hover { transform: translateY(-4px); box-shadow: 0 20px 48px rgba(0,0,0,.5); }
+.dish-img { aspect-ratio: 4/3; overflow: hidden; }
+.dish-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 1s cubic-bezier(.16,1,.3,1); }
+.dish-card:hover .dish-img img { transform: scale(1.06); }
+
+/* ── Add btn ── */
+.add-btn { background: transparent; border: 1px solid rgba(201,169,110,.35); color: #C9A96E; transition: all .2s; }
+.add-btn:hover { background: #C9A96E; color: #0A0A0A; border-color: #C9A96E; }
+
+/* ── Qty controls ── */
+.qty-wrap { display: flex; align-items: center; gap: 8px; background: #111; border: 1px solid rgba(201,169,110,.25); padding: 4px 10px; }
+.qty-btn { background: none; border: none; color: #C9A96E; font-size: 18px; cursor: pointer; line-height: 1; padding: 0 4px; }
+.qty-btn:hover { color: #E2C992; }
+
+/* ── Cart ── */
+#cart-panel { transition: transform .4s cubic-bezier(.16,1,.3,1); }
+.cart-item { border-bottom: 1px solid rgba(201,169,110,.1); }
+.cart-item:last-child { border-bottom: none; }
+
+/* ── Form fields ── */
+.field { width: 100%; background: #111; border: 1px solid rgba(201,169,110,.2); color: #F5F0E8; padding: 13px 16px; font-family: 'Cormorant Garamond', serif; font-size: 17px; outline: none; transition: border-color .3s; }
+.field:focus { border-color: #C9A96E; }
+.field::placeholder { color: #B8B0A0; }
+
+/* ── Mobile cart bar ── */
+#mobile-cart-bar { display: none; }
+@media(max-width: 1023px) {
+  #cart-panel { position: fixed; inset: 0; z-index: 300; transform: translateX(100%); overflow-y: auto; max-height: 100dvh; }
+  #cart-panel.open { transform: translateX(0); }
+  #mobile-cart-bar { display: flex; }
+  #cart-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 299; }
+  #cart-overlay.open { display: block; }
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #111; }
+::-webkit-scrollbar-thumb { background: rgba(201,169,110,.3); border-radius: 2px; }
+</style>
+</head>
+<body class="bg-dark text-cream font-cormorant overflow-x-hidden">
+
+<!-- ══════════════ NAV ══════════════ -->
+<nav class="sticky top-0 z-50 flex justify-between items-center px-6 md:px-12 py-4 bg-dark border-b border-gold/10">
+  <a href="/" class="font-syne text-xl font-bold tracking-[6px] text-gold uppercase hover:text-gold-light transition-colors">Azzona</a>
+  <div class="flex items-center gap-3 md:gap-6">
+    <a href="/" class="font-syne text-[11px] tracking-[2px] uppercase text-muted hover:text-cream transition-colors hidden sm:block">← Voltar ao Site</a>
+    <div class="flex items-center gap-2 font-syne text-[11px] tracking-[2px] uppercase text-gold">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      Delivery
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════ HEADER ══════════════ -->
+<header class="relative py-16 md:py-24 px-6 md:px-12 overflow-hidden">
+  <div class="absolute inset-0 bg-gradient-to-b from-dark3 to-dark pointer-events-none"></div>
+  <div class="absolute inset-0 opacity-5" style="background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>🍽</text></svg>'); background-size:200px; background-repeat:repeat;"></div>
+  <div class="relative text-center max-w-2xl mx-auto">
+    <p class="font-syne text-[11px] tracking-[5px] uppercase text-gold mb-4">Azzona · Maputo</p>
+    <h1 class="font-playfair text-4xl md:text-6xl text-cream mb-4">Delivery <span class="italic text-gold">Premium</span></h1>
+    <p class="text-muted text-xl font-cormorant">Escolha os seus pratos favoritos e receba em casa.<br>Feito na hora, entregue com carinho.</p>
+  </div>
+</header>
+
+<!-- ══════════════ MAIN LAYOUT ══════════════ -->
+<div class="flex relative max-w-screen-xl mx-auto">
+
+  <!-- ── MENU SECTION ── -->
+  <main class="flex-1 min-w-0 px-4 md:px-8 lg:px-10 pb-32">
+
+    <!-- Category filters -->
+    <div class="sticky top-16 z-40 py-4 bg-dark">
+      <div id="catFilters" class="flex gap-2 overflow-x-auto pb-1" style="scrollbar-width:none;">
+        <button class="cat-tab active font-syne text-xs tracking-[2px] uppercase px-5 py-2" data-cat="all">Todos</button>
+      </div>
+    </div>
+
+    <!-- Dishes grid -->
+    <div id="dishesGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 mt-2">
+      <!-- skeletons -->
+      <div class="skeleton h-72"></div>
+      <div class="skeleton h-72"></div>
+      <div class="skeleton h-72"></div>
+      <div class="skeleton h-72"></div>
+      <div class="skeleton h-72"></div>
+      <div class="skeleton h-72"></div>
+    </div>
+
+    <div id="emptyMsg" class="hidden text-center py-20">
+      <p class="text-muted text-2xl font-cormorant italic">Nenhum prato nesta categoria.</p>
+    </div>
+  </main>
+
+  <!-- ── CART PANEL (desktop: sticky sidebar) ── -->
+  <aside id="cart-panel" class="w-full lg:w-[380px] flex-shrink-0 bg-dark2 border-l border-gold/10 lg:sticky lg:top-16 lg:self-start lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto">
+    <div class="p-6">
+      <!-- Header -->
+      <div class="flex justify-between items-center mb-6 pb-4 border-b border-gold/10">
+        <h2 class="font-syne text-sm tracking-[3px] uppercase text-gold">O Meu Pedido</h2>
+        <button id="cartCloseBtn" class="lg:hidden text-muted hover:text-cream transition-colors" onclick="closeCart()">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Empty state -->
+      <div id="cartEmpty" class="py-12 text-center">
+        <div class="text-4xl mb-3">🛵</div>
+        <p class="text-muted font-cormorant italic text-lg">O seu carrinho está vazio.</p>
+        <p class="text-muted/60 text-sm font-syne mt-1">Escolha os seus pratos favoritos.</p>
+      </div>
+
+      <!-- Cart items -->
+      <div id="cartItems" class="hidden space-y-1 mb-4"></div>
+
+      <!-- Subtotal -->
+      <div id="cartFooter" class="hidden">
+        <div class="flex justify-between items-center py-3 border-t border-b border-gold/15 my-4">
+          <span class="font-syne text-xs tracking-[2px] uppercase text-muted">Total do Pedido</span>
+          <span id="cartTotal" class="font-playfair text-2xl text-gold">0 MT</span>
+        </div>
+
+        <!-- Customer info form -->
+        <div class="space-y-3 mt-4">
+          <p class="font-syne text-[11px] tracking-[3px] uppercase text-muted mb-3">Dados para entrega</p>
+          <input id="clientName"    class="field" type="text"     placeholder="Nome completo *">
+          <input id="clientPhone"   class="field" type="tel"      placeholder="Telefone / WhatsApp *">
+          <input id="clientAddress" class="field" type="text"     placeholder="Morada de entrega *">
+          <textarea id="clientNotes" class="field" rows="2" placeholder="Observações (opcional)..." style="resize:none;"></textarea>
+        </div>
+
+        <button onclick="sendWhatsApp()"
+          class="mt-5 w-full flex items-center justify-center gap-3 bg-[#25D366] hover:bg-[#20bf5c] text-white font-syne text-[12px] tracking-[3px] uppercase py-4 transition-all hover:-translate-y-0.5 active:translate-y-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Enviar Pedido via WhatsApp
+        </button>
+
+        <p class="text-center text-muted/50 font-syne text-[10px] tracking-[1px] mt-3">O restaurante irá confirmar a entrega via WhatsApp</p>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- ── Cart overlay (mobile) ── -->
+<div id="cart-overlay" onclick="closeCart()"></div>
+
+<!-- ══════════════ MOBILE CART BAR ══════════════ -->
+<div id="mobile-cart-bar" class="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+  <button onclick="openCart()"
+    class="w-full flex items-center justify-between px-6 py-4 bg-gold text-dark font-syne text-sm tracking-[2px] uppercase">
+    <span class="flex items-center gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      Ver Carrinho
+    </span>
+    <span id="mobileCartBadge" class="hidden bg-dark text-gold font-bold text-xs px-2 py-0.5 rounded-full">0</span>
+  </button>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────────
+const WHATSAPP_NUMBER = '258840000000'; // ← substituir pelo número do restaurante
+const CURRENCY = 'MT';
+
+// ── State ───────────────────────────────────────────────────────────────────
+let allDishes = [];
+let cart = {}; // { dishId: { dish, qty } }
+let activeCategory = 'all';
+
+// ── Init ────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', loadDishes);
+
+async function loadDishes() {
+  try {
+    const res = await fetch('/api/dishes');
+    allDishes = await res.json();
+    buildCategoryTabs();
+    renderDishes('all');
+  } catch (e) {
+    document.getElementById('dishesGrid').innerHTML =
+      '<p class="col-span-full text-center text-muted py-16 italic">Não foi possível carregar o menu. Tente novamente.</p>';
+  }
+}
+
+function buildCategoryTabs() {
+  const cats = ['all', ...new Set(allDishes.map(d => d.category))];
+  const filtersEl = document.getElementById('catFilters');
+  filtersEl.innerHTML = '';
+  cats.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = `cat-tab font-syne text-xs tracking-[2px] uppercase px-5 py-2 ${cat === 'all' ? 'active' : ''}`;
+    btn.dataset.cat = cat;
+    btn.textContent = cat === 'all' ? 'Todos' : cat;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCategory = cat;
+      renderDishes(cat);
+    });
+    filtersEl.appendChild(btn);
+  });
+}
+
+function renderDishes(cat) {
+  const grid = document.getElementById('dishesGrid');
+  const empty = document.getElementById('emptyMsg');
+  const filtered = cat === 'all' ? allDishes : allDishes.filter(d => d.category === cat);
+
+  if (!filtered.length) {
+    grid.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  grid.innerHTML = filtered.map(dish => {
+    const inCart = cart[dish.id];
+    const price = Number(dish.price);
+    return `
+    <div class="dish-card" id="card-${dish.id}">
+      <div class="dish-img">
+        <img src="${dish.image_url || '/img/placeholder.jpg'}"
+             alt="${dish.name}"
+             onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22><rect fill=%22%231A1A1A%22 width=%22400%22 height=%22300%22/><text fill=%22%23444%22 font-size=%2248%22 x=%2250%%25%22 y=%2250%%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>🍽</text></svg>'"
+             loading="lazy">
+      </div>
+      <div class="p-4">
+        <span class="font-syne text-[10px] tracking-[2px] uppercase text-gold/70">${dish.category}</span>
+        <h3 class="font-playfair text-lg text-cream mt-1 mb-1">${dish.name}</h3>
+        <p class="text-muted text-sm font-cormorant leading-snug mb-3" style="min-height:2.5em">${dish.description || ''}</p>
+        <div class="flex items-center justify-between mt-auto">
+          <span class="font-playfair text-xl text-gold">${price.toLocaleString('pt-MZ')} ${CURRENCY}</span>
+          ${inCart
+            ? `<div class="qty-wrap">
+                <button class="qty-btn" onclick="changeQty('${dish.id}',-1)">−</button>
+                <span class="font-syne text-sm text-cream w-5 text-center">${inCart.qty}</span>
+                <button class="qty-btn" onclick="changeQty('${dish.id}',1)">+</button>
+               </div>`
+            : `<button class="add-btn font-syne text-[11px] tracking-[2px] uppercase px-4 py-2" onclick="addToCart('${dish.id}')">+ Adicionar</button>`
+          }
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Cart ─────────────────────────────────────────────────────────────────────
+function addToCart(id) {
+  const dish = allDishes.find(d => d.id === id);
+  if (!dish) return;
+  cart[id] = { dish, qty: 1 };
+  updateCart();
+  renderDishes(activeCategory);
+}
+
+function changeQty(id, delta) {
+  if (!cart[id]) return;
+  cart[id].qty += delta;
+  if (cart[id].qty <= 0) delete cart[id];
+  updateCart();
+  renderDishes(activeCategory);
+}
+
+function updateCart() {
+  const items = Object.values(cart);
+  const cartItemsEl  = document.getElementById('cartItems');
+  const cartEmptyEl  = document.getElementById('cartEmpty');
+  const cartFooterEl = document.getElementById('cartFooter');
+  const cartTotalEl  = document.getElementById('cartTotal');
+  const mobileBadge  = document.getElementById('mobileCartBadge');
+
+  if (!items.length) {
+    cartItemsEl.classList.add('hidden');
+    cartFooterEl.classList.add('hidden');
+    cartEmptyEl.classList.remove('hidden');
+    mobileBadge.classList.add('hidden');
+    return;
+  }
+
+  cartEmptyEl.classList.add('hidden');
+  cartItemsEl.classList.remove('hidden');
+  cartFooterEl.classList.remove('hidden');
+
+  const total = items.reduce((s, { dish, qty }) => s + Number(dish.price) * qty, 0);
+  const totalItems = items.reduce((s, { qty }) => s + qty, 0);
+
+  cartTotalEl.textContent = `${total.toLocaleString('pt-MZ')} ${CURRENCY}`;
+  mobileBadge.textContent = totalItems;
+  mobileBadge.classList.remove('hidden');
+
+  cartItemsEl.innerHTML = items.map(({ dish, qty }) => `
+    <div class="cart-item py-3 flex items-start gap-3">
+      <img src="${dish.image_url || ''}"
+           onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect fill=%22%23222%22 width=%2248%22 height=%2248%22/><text fill=%22%23555%22 font-size=%2224%22 x=%2250%%25%22 y=%2250%%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>🍽</text></svg>'"
+           class="w-12 h-12 object-cover flex-shrink-0" alt="${dish.name}">
+      <div class="flex-1 min-w-0">
+        <p class="font-cormorant text-cream text-base leading-tight">${dish.name}</p>
+        <p class="text-muted text-xs font-syne">${Number(dish.price).toLocaleString('pt-MZ')} ${CURRENCY} × ${qty}</p>
+      </div>
+      <div class="flex items-center gap-1 flex-shrink-0">
+        <button class="qty-btn text-sm" onclick="changeQty('${dish.id}',-1)">−</button>
+        <span class="font-syne text-xs w-4 text-center text-cream">${qty}</span>
+        <button class="qty-btn text-sm" onclick="changeQty('${dish.id}',1)">+</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── WhatsApp ──────────────────────────────────────────────────────────────────
+function sendWhatsApp() {
+  const name    = document.getElementById('clientName').value.trim();
+  const phone   = document.getElementById('clientPhone').value.trim();
+  const address = document.getElementById('clientAddress').value.trim();
+  const notes   = document.getElementById('clientNotes').value.trim();
+
+  if (!name || !phone || !address) {
+    alert('Por favor preencha o nome, telefone e morada de entrega.');
+    return;
+  }
+  if (!Object.keys(cart).length) {
+    alert('O carrinho está vazio.');
+    return;
+  }
+
+  const items = Object.values(cart);
+  const total = items.reduce((s, { dish, qty }) => s + Number(dish.price) * qty, 0);
+
+  const lines = items.map(({ dish, qty }) =>
+    `  • ${qty}x ${dish.name} — ${(Number(dish.price) * qty).toLocaleString('pt-MZ')} ${CURRENCY}`
+  ).join('\n');
+
+  const msg = [
+    '🛵 *Pedido Azzona Delivery*',
+    '',
+    `*Cliente:* ${name}`,
+    `*Telefone:* ${phone}`,
+    `*Morada:* ${address}`,
+    notes ? `*Observações:* ${notes}` : null,
+    '',
+    '*Pedido:*',
+    lines,
+    '',
+    `*Total: ${total.toLocaleString('pt-MZ')} ${CURRENCY}*`,
+    '',
+    '_Aguardo confirmação. Obrigado!_ 🙏',
+  ].filter(l => l !== null).join('\n');
+
+  const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+}
+
+// ── Mobile cart open/close ────────────────────────────────────────────────────
+function openCart() {
+  document.getElementById('cart-panel').classList.add('open');
+  document.getElementById('cart-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeCart() {
+  document.getElementById('cart-panel').classList.remove('open');
+  document.getElementById('cart-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+</script>
+</body>
+</html>
