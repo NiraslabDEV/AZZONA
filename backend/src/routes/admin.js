@@ -172,7 +172,7 @@ router.get('/customers/search', auth, async (req, res) => {
                      regexp_replace(r.customer_phone,'[^0-9]','','g')) AS visits
        FROM reservations r
        WHERE regexp_replace(customer_phone,'[^0-9]','','g') LIKE $1
-       ORDER BY customer_phone, date DESC
+       ORDER BY customer_phone, r.date DESC
        LIMIT 5`,
       [`%${normalized}%`]
     );
@@ -211,7 +211,7 @@ router.post('/events', auth, uploadImage('image'), async (req, res) => {
 router.get('/events', auth, async (req, res) => {
   try {
     const { rows } = await db.query(
-      `SELECT *, date::text AS date, created_at::text AS created_at FROM events ORDER BY date ASC`
+      `SELECT *, date::text AS date, created_at::text AS created_at FROM events ORDER BY events.date ASC`
     );
     res.json(rows);
   } catch (e) {
@@ -284,7 +284,7 @@ router.get('/orders', auth, async (req, res) => {
   try {
     const { rows } = await db.query(
       `SELECT *, created_at::text AS created_at, updated_at::text AS updated_at
-       FROM orders ${where} ORDER BY created_at DESC`,
+       FROM orders ${where} ORDER BY orders.created_at DESC`,
       params
     );
     res.json(rows);
@@ -300,7 +300,7 @@ router.get('/orders/today', auth, async (req, res) => {
   try {
     const { rows } = await db.query(
       `SELECT *, created_at::text AS created_at, updated_at::text AS updated_at
-       FROM orders WHERE created_at::date = $1 ORDER BY created_at DESC`,
+       FROM orders WHERE created_at::date = $1 ORDER BY orders.created_at DESC`,
       [today]
     );
     const totalRevenue = rows.reduce((s, r) => s + Number(r.total), 0);

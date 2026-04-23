@@ -14,6 +14,7 @@ const adminRouter = require('./routes/admin');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.set('trust proxy', 1);
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
 app.use(express.json());
@@ -38,7 +39,7 @@ app.get('/api/events/active', async (req, res) => {
   try {
     const { rows } = await db.query(
       `SELECT *, date::text AS date, created_at::text AS created_at
-       FROM events WHERE is_active = true ORDER BY date ASC`
+       FROM events WHERE is_active = true ORDER BY events.date ASC`
     );
     res.json(rows);
   } catch (e) {
