@@ -9,7 +9,7 @@ const memStorage = multer.memoryStorage();
 
 const _multer = multer({
   storage: memStorage,
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
+  limits: { fileSize: 8 * 1024 * 1024 }, // 8 MB
   fileFilter: (_req, file, cb) => {
     // Optimistic MIME check — real validation happens after buffer is available
     if (!file.mimetype.startsWith('image/')) {
