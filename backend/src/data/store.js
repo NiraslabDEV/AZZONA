@@ -56,6 +56,8 @@ const reservations = [
 const settings = {
   booking_closed: false,
   absence_message: '',
+  // Black Coffee artist — admin pode mudar pelo dashboard
+  spotify_embed_url: 'https://open.spotify.com/embed/artist/3qm84nBOXUEQ2vnTfUTTFC?utm_source=generator&theme=0',
 };
 
 module.exports = { reservations, settings };

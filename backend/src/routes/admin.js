@@ -92,7 +92,7 @@ router.get('/settings', auth, (req, res) => {
 // PUT /api/admin/settings/:key
 router.put('/settings/:key', auth, (req, res) => {
   const { key } = req.params;
-  const allowed = ['booking_closed', 'absence_message'];
+  const allowed = ['booking_closed', 'absence_message', 'spotify_embed_url'];
   if (!allowed.includes(key)) {
     return res.status(400).json({ error: 'Configuração inválida.' });
   }

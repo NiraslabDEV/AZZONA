@@ -29,6 +29,7 @@ router.get('/booking-status', (req, res) => {
   res.json({
     booking_closed: settings.booking_closed,
     absence_message: settings.absence_message,
+    spotify_embed_url: settings.spotify_embed_url,
   });
 });
 
